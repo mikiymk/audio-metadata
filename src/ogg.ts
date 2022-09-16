@@ -48,6 +48,11 @@ const parseComments = (packet: DataView): Record<string, string> | undefined => 
  * See http://www.ietf.org/rfc/rfc3533.txt
  * @param buffer
  */
+/**
+ * Read the Vorbis Comment tag from the buffer if it can be read.
+ * @param buffer Buffer object for music files containing Vorbis Comment tags
+ * @returns Vorbis Comment object on success, undefined on failure
+ */
 export const ogg = (buffer: Uint8Array | ArrayBufferLike): Record<string, string> | undefined => {
   const view = createView(buffer);
 

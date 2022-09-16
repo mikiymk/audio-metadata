@@ -6,7 +6,7 @@ const checkMagicId3v1 = (view: DataView): boolean => {
   return id3Magic === "TAG";
 };
 
-type ID3v1 = {
+export type ID3v1 = {
   title: string;
   artist: string;
   album: string;
@@ -16,6 +16,11 @@ type ID3v1 = {
   genre: number;
 };
 
+/**
+ * Read the ID3v1 tag from the last 128 bytes of the buffer if it can be read.
+ * @param buffer Buffer object for music files containing ID3v1 tags
+ * @returns ID3v1 object on success, undefined on failure
+ */
 export const id3v1 = (buffer: Uint8Array | ArrayBufferLike): ID3v1 | undefined => {
   //read last 128 bytes
   const view = createView(buffer);

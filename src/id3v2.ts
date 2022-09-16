@@ -65,6 +65,11 @@ const readFrame = (view: DataView, offset: number): ID3v2Frame | undefined => {
 //http://id3.org/id3v2.3.0
 //http://id3.org/id3v2.4.0-structure
 //http://id3.org/id3v2.4.0-frames
+/**
+ * Read the ID3v2 tag from the buffer if it can be read.
+ * @param buffer Buffer object for music files containing ID3v2 tags
+ * @returns ID3v2 object on success, undefined on failure
+ */
 export const id3v2 = (buffer: Uint8Array | ArrayBufferLike): Record<string, string> | undefined => {
   const view = createView(buffer);
   if (!checkMagicId3(view, 0)) {
