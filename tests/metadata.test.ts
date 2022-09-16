@@ -24,7 +24,7 @@ describe("ogg", () => {
   });
 
   it("should read comments from truncated ogg", async () => {
-    const file = join(__dirname, "files", "truncated.ogg");
+    const file = filePath("truncated.ogg");
     const buffer = await readFile(file);
 
     const metadata = ogg(buffer);
@@ -47,7 +47,7 @@ describe("ogg", () => {
 
 describe("id3", () => {
   it("should read id3v2.4.0", async () => {
-    const file = join(__dirname, "files", "id3v2.4.mp3");
+    const file = filePath("id3v2.4.mp3");
     const buffer = await readFile(file);
 
     const metadata = id3v2(buffer);
@@ -64,7 +64,7 @@ describe("id3", () => {
   });
 
   it("should read messed up id3v2.4.0", async () => {
-    const file = join(__dirname, "files", "id3v2.4_wtf.mp3");
+    const file = filePath("id3v2.4_wtf.mp3");
     const buffer = await readFile(file);
 
     const metadata = id3v2(buffer);
@@ -83,7 +83,7 @@ describe("id3", () => {
   });
 
   it("should read truncated id3v2.4.0", async () => {
-    const file = join(__dirname, "files", "truncated.mp3");
+    const file = filePath("truncated.mp3");
     const buffer = await readFile(file);
 
     const metadata = id3v2(buffer);
@@ -98,7 +98,7 @@ describe("id3", () => {
   });
 
   it("should read id3v2.3.0", async () => {
-    const file = join(__dirname, "files", "id3v2.3.mp3");
+    const file = filePath("id3v2.3.mp3");
     const buffer = await readFile(file);
 
     const metadata = id3v2(buffer);
@@ -113,7 +113,7 @@ describe("id3", () => {
   });
 
   it("should read id3v1", async () => {
-    const file = join(__dirname, "files", "id3v1.mp3");
+    const file = filePath("id3v1.mp3");
     const buffer = await readFile(file);
 
     const metadata = id3v1(buffer);
@@ -129,7 +129,7 @@ describe("id3", () => {
   });
 
   it("should read id3v1 with 30-byte comment and no track", async () => {
-    const file = join(__dirname, "files", "id3v1_notrack.mp3");
+    const file = filePath("id3v1_notrack.mp3");
     const buffer = await readFile(file);
 
     const metadata = id3v1(buffer);

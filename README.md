@@ -1,7 +1,8 @@
 # audio-metadata
 
-[![Build Status](https://travis-ci.org/tmont/audio-metadata.png)](https://travis-ci.org/tmont/audio-metadata)
-[![NPM version](https://badge.fury.io/js/audio-metadata.png)](http://badge.fury.io/js/audio-metadata)
+[![npm version](https://badge.fury.io/js/@mikiymk%2Faudio-metadata.svg)](https://badge.fury.io/js/@mikiymk%2Faudio-metadata)
+
+This is a fork of [audio-metadata](https://github.com/tmont/audio-metadata).
 
 This is a tinyish (2.1K gzipped) library to extract metadata from audio files.
 Specifically, it can extract [ID3v1](http://en.wikipedia.org/wiki/ID3#ID3v1),
@@ -12,6 +13,7 @@ Specifically, it can extract [ID3v1](http://en.wikipedia.org/wiki/ID3#ID3v1),
 Licensed under the [WTFPL](http://www.wtfpl.net/).
 
 ## What is this good for?
+
 The purpose of this library is to be very fast and small. It's suitable
 for server-side or client-side. Really any platform that supports
 `ArrayBuffer` and its ilk (`Uint8Array`, etc.).
@@ -46,6 +48,7 @@ file and still extract the metadata from it, rather than requiring actual valid
 MP3 data.
 
 ## Usage
+
 The library operates solely on `ArrayBuffer`s, or `Buffer`s for Node's convenience.
 So you'll need to preload your audio data before using this library.
 
@@ -53,7 +56,7 @@ The library defines three methods:
 
 ```javascript
 // extract comments from OGG container
-AudioMetaData.ogg(buffer)
+AudioMetaData.ogg(buffer);
 
 // extract ID3v2 tags
 AudioMetaData.id3v2(buffer);
@@ -64,28 +67,29 @@ AudioMetaData.id3v1(buffer);
 
 The result is an object with the metadata. It attempts to normalize common keys:
 
-* __title__: (`TIT1` and `TIT2` in id3v2)
-* __artist__: (`TSE1` in id3v2)
-* __composer__: (`TCOM` in id3v2)
-* __album__: (`TALB` in id3v2)
-* __track__: (`TRCK` in id3v2, commonly `TRACKNUMBER` in vorbis comments)
-* __year__: (`TDRC` (date recorded) is used in id3v2)
-* __encoder__: (`TSSE` in id3v2)
-* __genre__: (`TCON` in id3v2)
+- **title**: (`TIT1` and `TIT2` in id3v2)
+- **artist**: (`TSE1` in id3v2)
+- **composer**: (`TCOM` in id3v2)
+- **album**: (`TALB` in id3v2)
+- **track**: (`TRCK` in id3v2, commonly `TRACKNUMBER` in vorbis comments)
+- **year**: (`TDRC` (date recorded) is used in id3v2)
+- **encoder**: (`TSSE` in id3v2)
+- **genre**: (`TCON` in id3v2)
 
 Everything else will be keyed by its original name. For id3v2,
 anything that is not a text identifier (i.e. a frame that starts with a
 "T") is ignored. This includes comments (`COMM`).
 
 ### Node
+
 Install it using NPM: `npm install audio-metadata` or `npm install -g audio-metadata`
 if you want to use it from the shell.
 
 ```javascript
-var audioMetaData = require('audio-metadata'),
-	fs = require('fs');
+var audioMetaData = require("audio-metadata"),
+  fs = require("fs");
 
-var oggData = fs.readFileSync('/path/to/my.ogg');
+var oggData = fs.readFileSync("/path/to/my.ogg");
 var metadata = audioMetaData.ogg(oggData);
 /*
 {
@@ -101,6 +105,7 @@ var metadata = audioMetaData.ogg(oggData);
 ```
 
 #### From the Shell
+
 ```
 Extract metadata from audio files
 
@@ -123,9 +128,10 @@ OPTIONS
 EXAMPLE
 Search for metadata in the first 300 bytes in 100 byte increments
  audio-metadata -t id3v2 -c 100 -q 300 keepitoffmy.wav
- ```
+```
 
 ### Browser
+
 This library has been tested on current versions of Firefox and Chrome. IE
 might work, since it apparently supports `ArrayBuffer`. Safari/Opera are
 probably okayish since they're webkit. Your mileage may vary.
@@ -135,13 +141,13 @@ Loading `audio-metadata.min.js` will define the `AudioMetadata` global variable.
 ```html
 <script type="text/javascript" src="audio-metadata.min.js"></script>
 <script type="text/javascript">
-	var req = new XMLHttpRequest();
-	req.open('GET', 'http://example.com/sofine.mp3', true);
-	req.responseType = 'arraybuffer';
+  var req = new XMLHttpRequest();
+  req.open("GET", "http://example.com/sofine.mp3", true);
+  req.responseType = "arraybuffer";
 
-	req.onload = function() {
-		var metadata = AudioMetaData.id3v2(req.response);
-		/*
+  req.onload = function () {
+    var metadata = AudioMetaData.id3v2(req.response);
+    /*
 			{
 				"TIT2": "Foobar",
 				"title": "Foobar",
@@ -156,13 +162,14 @@ Loading `audio-metadata.min.js` will define the `AudioMetadata` global variable.
 				"encoder": "Lavf53.21.1"
 			}
 		*/
-	};
+  };
 
-	req.send(null);
+  req.send(null);
 </script>
 ```
 
 ## Development
+
 ```bash
 git clone git@github.com:tmont/audio-metadata.js
 cd audio-metadata

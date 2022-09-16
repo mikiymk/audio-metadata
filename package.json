@@ -10,10 +10,13 @@
     "wav",
     "audio"
   ],
-  "author": "Tommy Montgomery <tmont@tmont.com> (http://tmont.com/)",
+  "author": "mikiymk",
   "repository": {
     "type": "git",
     "url": "https://github.com/mikiymk/audio-metadata.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "main": "dist/index.js",
   "files": [
