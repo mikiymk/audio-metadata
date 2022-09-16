@@ -15,7 +15,7 @@ const parsePage = (view: DataView, offset: number): { pageSize: number; packet: 
 
   const pageSize = headerSize + segmentTable.reduce((cur, next) => cur + next),
     length = headerSize + 1 + "vorbis".length,
-    packet = createView(new Uint8Array(readBytes(view, offset + length, pageSize - length)).buffer);
+    packet = createView(new Uint8Array(readBytes(view, offset + length, pageSize - length)));
 
   return { pageSize, packet };
 };

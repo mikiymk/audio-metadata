@@ -1,5 +1,5 @@
 {
-  "name": "audio-metadata",
+  "name": "@mikiymk/audio-metadata",
   "version": "0.3.0",
   "description": "Extract metadata from audio files",
   "keywords": [
@@ -13,15 +13,10 @@
   "author": "Tommy Montgomery <tmont@tmont.com> (http://tmont.com/)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/tmont/audio-metadata.git"
+    "url": "https://github.com/mikiymk/audio-metadata.git"
   },
-  "bin": "bin/audio-metadata.js",
   "files": [
-    "index.js",
-    "audio-metadata.min.js",
-    "src",
-    "bin",
-    "README.md"
+    "dist"
   ],
   "license": "WTFPL",
   "devDependencies": {
@@ -29,12 +24,13 @@
     "eslint": "^8.23.1",
     "prettier": "^2.7.1",
     "typescript": "^4.8.3",
+    "vite": "^3.1.1",
     "vitest": "^0.23.2"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha -R spec tests",
-    "start": "./node_modules/.bin/serve -p 24578 .",
-    "build": "./node_modules/.bin/browserify -s AudioMetadata -e index.js --bare > audio-metadata.js",
-    "minify": "npm run build && ./node_modules/.bin/uglifyjs audio-metadata.js > audio-metadata.min.js && rm audio-metadata.js"
+    "test": "vitest run",
+    "build": "tsc",
+    "start": "vite",
+    "minify": "vite build"
   }
 }
