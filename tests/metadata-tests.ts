@@ -1,10 +1,13 @@
-const should = require("should"),
-  path = require("path"),
-  fs = require("fs"),
-  metaDataReader = require("../");
+import * as metaDataReader from "../";
+import * as should from "should";
+import * as path from "path";
+import * as fs from "fs";
+import { describe, it } from "vitest";
 
 describe("ogg", function () {
-  it("should read comments from ogg", function (done: (arg0: undefined) => void) {
+  it("should read comments from ogg", function (done: (
+    arg0: undefined
+  ) => void) {
     const file = path.join(__dirname, "files", "test.ogg");
     fs.readFile(file, function (err: any, buffer: any) {
       if (err) {
@@ -28,7 +31,9 @@ describe("ogg", function () {
     });
   });
 
-  it("should read comments from truncated ogg", function (done: (arg0: undefined) => void) {
+  it("should read comments from truncated ogg", function (done: (
+    arg0: undefined
+  ) => void) {
     const file = path.join(__dirname, "files", "truncated.ogg");
     fs.readFile(file, function (err: any, buffer: any) {
       if (err) {
@@ -82,7 +87,9 @@ describe("id3", function () {
     });
   });
 
-  it("should read messed up id3v2.4.0", function (done: (arg0: undefined) => void) {
+  it("should read messed up id3v2.4.0", function (done: (
+    arg0: undefined
+  ) => void) {
     const file = path.join(__dirname, "files", "id3v2.4_wtf.mp3");
     fs.readFile(file, function (err: any, buffer: any) {
       if (err) {
@@ -106,7 +113,9 @@ describe("id3", function () {
     });
   });
 
-  it("should read truncated id3v2.4.0", function (done: (arg0: undefined) => void) {
+  it("should read truncated id3v2.4.0", function (done: (
+    arg0: undefined
+  ) => void) {
     const file = path.join(__dirname, "files", "truncated.mp3");
     fs.readFile(file, function (err: any, buffer: any) {
       if (err) {
@@ -167,7 +176,9 @@ describe("id3", function () {
     });
   });
 
-  it("should read id3v1 with 30-byte comment and no track", function (done: (arg0: undefined) => void) {
+  it("should read id3v1 with 30-byte comment and no track", function (done: (
+    arg0: undefined
+  ) => void) {
     const file = path.join(__dirname, "files", "id3v1_notrack.mp3");
     fs.readFile(file, function (err: any, buffer: any) {
       if (err) {

@@ -1,4 +1,4 @@
-const utils = require("./utils");
+import * as utils from "./utils";
 
 function checkMagicId3(view: any, offset: number) {
   const id3Magic = utils.readBytes(view, offset, 3);
@@ -20,7 +20,7 @@ function getUint28(view: any, offset: number) {
 //http://id3.org/id3v2.3.0
 //http://id3.org/id3v2.4.0-structure
 //http://id3.org/id3v2.4.0-frames
-module.exports = function (buffer: any) {
+export function id3v2 (buffer: any) {
   const view = utils.createView(buffer);
   if (!checkMagicId3(view, 0)) {
     return null;
@@ -53,8 +53,8 @@ module.exports = function (buffer: any) {
         };
       }
 
-      let encoding = view.getUint8(offset),
-        data = "";
+      const encoding = view.getUint8(offset);
+      let data = "";
 
       if (encoding <= 3) {
         offset++;
@@ -101,7 +101,7 @@ module.exports = function (buffer: any) {
   };
 
   const endOfTags = offset + size,
-    frames = {};
+    frames: Record<string, string> = {};
   while (offset < endOfTags) {
     const frame = readFrame(offset);
     if (!frame) {

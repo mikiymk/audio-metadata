@@ -1,13 +1,13 @@
-const utils = require("./utils");
+import * as utils from "./utils";
 
 /**
  * See http://www.ietf.org/rfc/rfc3533.txt
  * @param {Buffer|ArrayBuffer} buffer
  */
-module.exports = function (buffer: any) {
+export function ogg(buffer: any) {
   const view = utils.createView(buffer);
 
-  function parsePage(offset: number, withPacket: boolean | undefined) {
+  function parsePage(offset: number, withPacket?: boolean) {
     if (view.byteLength < offset + 27) {
       return null;
     }
@@ -20,13 +20,13 @@ module.exports = function (buffer: any) {
       return null;
     }
 
-    let pageSize =
+    const pageSize =
         headerSize +
         segmentTable.reduce(function (cur: any, next: any) {
           return cur + next;
         }),
-      length = headerSize + 1 + "vorbis".length,
-      packetView = null;
+      length = headerSize + 1 + "vorbis".length;
+    let packetView = null;
 
     if (withPacket) {
       packetView = utils.createView(new ArrayBuffer(pageSize - length));
@@ -39,17 +39,13 @@ module.exports = function (buffer: any) {
     };
   }
 
-  function parseComments(packet: {
-    getUint32: (arg0: number, arg1: boolean) => any;
-  }) {
+  function parseComments(packet: DataView) {
     try {
-      let vendorLength = packet.getUint32(0, true),
+      const vendorLength = packet.getUint32(0, true),
         commentListLength = packet.getUint32(4 + vendorLength, true),
-        comments = {},
-        offset = 8 + vendorLength,
-        map = {
-          tracknumber: "track",
-        };
+        comments: Record<string, string> = {},
+        map = { tracknumber: "track" };
+      let offset = 8 + vendorLength;
 
       for (let i = 0; i < commentListLength; i++) {
         const commentLength = packet.getUint32(offset, true),
@@ -81,4 +77,4 @@ module.exports = function (buffer: any) {
   }
 
   return parseComments(commentHeader.packet);
-};
+}

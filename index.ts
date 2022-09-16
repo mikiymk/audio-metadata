@@ -1,5 +1,3 @@
-module.exports = {
-	ogg: require('./src/ogg'),
-	id3v1: require('./src/id3v1'),
-	id3v2: require('./src/id3v2')
-};
+export { ogg } from "./src/ogg";
+export { id3v1 } from "./src/id3v1";
+export { id3v2 } from "./src/id3v2";
