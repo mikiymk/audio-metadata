@@ -2,7 +2,7 @@
 
 [![npm version](https://badge.fury.io/js/@mikiymk%2Faudio-metadata.svg)](https://badge.fury.io/js/@mikiymk%2Faudio-metadata)
 
-This is a fork of [audio-metadata](https://github.com/tmont/audio-metadata).
+This is a fork of [audio-metadata](https://github.com/tmont/audio-metadata). Gzipped size: 1.3KiB.
 
 This is a tinyish (2.1K gzipped) library to extract metadata from audio files.
 Specifically, it can extract [ID3v1](http://en.wikipedia.org/wiki/ID3#ID3v1),
