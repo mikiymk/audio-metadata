@@ -1,4 +1,4 @@
-const toArrayBuffer = (buffer: Buffer): ArrayBuffer => {
+const toArrayBuffer = (buffer: Uint8Array): ArrayBuffer => {
   const arrayBuffer = new ArrayBuffer(buffer.length);
   const view = new Uint8Array(arrayBuffer);
   for (let i = 0; i < buffer.length; ++i) {
@@ -11,8 +11,8 @@ export const trimNull = (s: string): string => {
   return s.replace(/\0+$/, "");
 };
 
-export const createView = (buffer: ArrayBufferLike): DataView => {
-  if (typeof Buffer !== "undefined" && buffer instanceof Buffer) {
+export const createView = (buffer: Uint8Array | ArrayBufferLike): DataView => {
+  if (buffer instanceof Uint8Array) {
     //convert nodejs buffers to ArrayBuffer
     buffer = toArrayBuffer(buffer);
   }
@@ -24,57 +24,38 @@ export const createView = (buffer: ArrayBufferLike): DataView => {
   return new DataView(buffer);
 };
 
-export const readBytes = (
-  view: DataView,
-  offset: number,
-  length: number,
-  target?: DataView
-) => {
-  if (offset + length < 0) {
-    return [];
-  }
+export const readBytes = (view: DataView, offset: number, length: number, target?: DataView): number[] => {
+  const u8 = (view: DataView) => new Uint8Array(view.buffer);
+  const u8view = u8(view);
 
-  const bytes = [];
-  const max = Math.min(offset + length, view.byteLength);
-  for (let i = offset; i < max; i++) {
-    const value = view.getUint8(i);
-    bytes.push(value);
-    if (target) {
-      target.setUint8(i - offset, value);
+  if (target) {
+    const u8target = u8(target);
+    const max = Math.min(offset + length, u8view.byteLength);
+
+    for (let i = offset; i < max; i++) {
+      u8target[i - offset] = u8view[i];
     }
   }
 
-  return bytes;
+  return [...u8view.slice(offset, offset + length)];
 };
 
-export const readAscii = (
-  view: DataView,
-  offset: number,
-  length: number
-): string => {
-  if (view.byteLength < offset + length) {
-    return "";
-  }
-  let s = "";
-  for (let i = 0; i < length; i++) {
-    s += String.fromCharCode(view.getUint8(offset + i));
-  }
-
-  return s;
+export const readAscii = (view: DataView, offset: number, length: number): string => {
+  return new TextDecoder("ascii").decode(view.buffer.slice(offset, offset + length));
 };
 
-export const readUtf8 = (
-  view: DataView,
-  offset: number,
-  length: number
-): string => {
-  if (view.byteLength < offset + length) {
-    return "";
+export const readUtf8 = (view: DataView, offset: number, length: number): string => {
+  return new TextDecoder().decode(view.buffer.slice(offset, offset + length));
+};
+
+export const readUtf16 = (view: DataView, offset: number, length: number): string => {
+  if (view.getUint16(offset) === 0xfeff) {
+    return new TextDecoder("utf16be").decode(view.buffer.slice(offset, offset + length));
+  } else {
+    return new TextDecoder("utf16le").decode(view.buffer.slice(offset, offset + length));
   }
+};
 
-  const buffer = view.buffer.slice(offset, offset + length);
-
-  //http://stackoverflow.com/a/17192845 - convert byte array to UTF8 string
-  const encodedString = String.fromCharCode(...new Uint8Array(buffer));
-  return decodeURIComponent(escape(encodedString));
+export const readUtf16be = (view: DataView, offset: number, length: number): string => {
+  return new TextDecoder("utf16be").decode(view.buffer.slice(offset, offset + length));
 };

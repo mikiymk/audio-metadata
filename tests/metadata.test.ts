@@ -1,4 +1,4 @@
-import { ogg, id3v2, id3v1 } from "..";
+import { ogg, id3v2, id3v1 } from "../src";
 import { join } from "path";
 import { readFile } from "fs/promises";
 import { describe, expect, it } from "vitest";
@@ -41,7 +41,7 @@ describe("ogg", () => {
   it("should not explode if ogg comments don't exist", async () => {
     const buffer = Buffer.alloc(30);
     const metadata = ogg(buffer);
-    expect(metadata).toBeNull();
+    expect(metadata).toBeUndefined();
   });
 });
 
@@ -139,7 +139,7 @@ describe("id3", () => {
     expect(metadata).toHaveProperty("artist", "The Foobars");
     expect(metadata).toHaveProperty("album", "FUBAR");
     expect(metadata).toHaveProperty("year", "2014");
-    expect(metadata).toHaveProperty("track", null);
+    expect(metadata).toHaveProperty("track", undefined);
     expect(metadata).toHaveProperty("genre", 255);
     expect(metadata).toHaveProperty("comment", "this should be exactly 30 char");
   });
@@ -147,12 +147,12 @@ describe("id3", () => {
   it("should not explode if ID3v1 tags don't exist", () => {
     const buffer = Buffer.alloc(1);
     const metadata = id3v1(buffer);
-    expect(metadata).toBeNull();
+    expect(metadata).toBeUndefined();
   });
 
   it("should not explode if ID3v2 tags don't exist", () => {
     const buffer = Buffer.alloc(1);
     const metadata = id3v2(buffer);
-    expect(metadata).toBeNull();
+    expect(metadata).toBeUndefined();
   });
 });

@@ -1,63 +1,38 @@
-import { readBytes, createView, readAscii } from "./utils";
+import { createView, readAscii, trimNull } from "./utils";
 
 const checkMagicId3v1 = (view: DataView): boolean => {
-  const id3Magic = readBytes(view, view.byteLength - 128, 3);
+  const id3Magic = readAscii(view, view.byteLength - 128, 3);
   //"TAG"
-  return id3Magic[0] === 84 && id3Magic[1] === 65 && id3Magic[2] === 71;
+  return id3Magic === "TAG";
 };
 
-export const id3v1 = (
-  buffer: ArrayBufferLike
-): {
+type ID3v1 = {
   title: string;
   artist: string;
   album: string;
   year: string;
   comment: string;
-  track: number | null;
+  track: number | undefined;
   genre: number;
-} | null => {
+};
+
+export const id3v1 = (buffer: Uint8Array | ArrayBufferLike): ID3v1 | undefined => {
   //read last 128 bytes
   const view = createView(buffer);
-  if (!checkMagicId3v1(view)) {
-    return null;
+  if (!checkMagicId3v1(view) || view.byteLength < 128) {
+    return undefined;
   }
 
-  const trim = (value: string) => {
-    return value.replace(/[\s\0]+$/, "");
-  };
+  const offset = view.byteLength - 128;
+  //next byte is the track
+  const hasTrack = view.getUint8(offset + 125) === 0;
+  const title = trimNull(readAscii(view, offset + 3, 30)),
+    artist = trimNull(readAscii(view, offset + 33, 30)),
+    album = trimNull(readAscii(view, offset + 63, 30)),
+    year = trimNull(readAscii(view, offset + 93, 4)),
+    comment = trimNull(readAscii(view, offset + 97, hasTrack ? 28 : 30)),
+    track = hasTrack ? view.getUint8(offset + 126) : undefined,
+    genre = view.getUint8(offset + 127);
 
-  try {
-    let offset = view.byteLength - 128 + 3;
-    const title = readAscii(view, offset, 30),
-      artist = readAscii(view, offset + 30, 30),
-      album = readAscii(view, offset + 60, 30),
-      year = readAscii(view, offset + 90, 4);
-
-    offset += 94;
-
-    let comment = readAscii(view, offset, 28),
-      track = null;
-    offset += 28;
-    if (view.getUint8(offset) === 0) {
-      //next byte is the track
-      track = view.getUint8(offset + 1);
-    } else {
-      comment += readAscii(view, offset, 2);
-    }
-
-    offset += 2;
-    const genre = view.getUint8(offset);
-    return {
-      title: trim(title),
-      artist: trim(artist),
-      album: trim(album),
-      year: trim(year),
-      comment: trim(comment),
-      track: track,
-      genre: genre,
-    };
-  } catch (e) {
-    return null;
-  }
+  return { title, artist, album, year, comment, track, genre };
 };
