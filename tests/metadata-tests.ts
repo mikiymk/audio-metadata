@@ -1,22 +1,20 @@
-import * as metaDataReader from "../";
-import * as should from "should";
-import * as path from "path";
-import * as fs from "fs";
+import { ogg, id3v2, id3v1 } from "../";
+import { exist, deepEqual } from "should";
+import { join } from "path";
+import { readFile } from "fs";
 import { describe, it } from "vitest";
 
-describe("ogg", function () {
-  it("should read comments from ogg", function (done: (
-    arg0: undefined
-  ) => void) {
-    const file = path.join(__dirname, "files", "test.ogg");
-    fs.readFile(file, function (err: any, buffer: any) {
+describe("ogg", () => {
+  it("should read comments from ogg", (done: (arg0: undefined) => void) => {
+    const file = join(__dirname, "files", "test.ogg");
+    readFile(file, (err, buffer) => {
       if (err) {
         done(err);
         return;
       }
 
-      const metadata = metaDataReader.ogg(buffer);
-      should.exist(metadata);
+      const metadata = ogg(buffer);
+      exist(metadata);
       metadata.should.have.property("title", "Contra Base Snippet");
       metadata.should.have.property("artist", "Konami");
       metadata.should.have.property(
@@ -31,18 +29,18 @@ describe("ogg", function () {
     });
   });
 
-  it("should read comments from truncated ogg", function (done: (
+  it("should read comments from truncated ogg", (done: (
     arg0: undefined
-  ) => void) {
-    const file = path.join(__dirname, "files", "truncated.ogg");
-    fs.readFile(file, function (err: any, buffer: any) {
+  ) => void) => {
+    const file = join(__dirname, "files", "truncated.ogg");
+    readFile(file, (err, buffer) => {
       if (err) {
         done(err);
         return;
       }
 
-      const metadata = metaDataReader.ogg(buffer);
-      should.exist(metadata);
+      const metadata = ogg(buffer);
+      exist(metadata);
       metadata.should.have.property("title", "Contra Base Snippet");
       metadata.should.have.property("artist", "Konami");
       metadata.should.have.property(
@@ -56,25 +54,25 @@ describe("ogg", function () {
     });
   });
 
-  it("should not explode if ogg comments don't exist", function (done: () => void) {
+  it("should not explode if ogg comments don't exist", (done: () => void) => {
     const buffer = new Buffer(30);
-    const metadata = metaDataReader.ogg(buffer);
-    should.deepEqual(metadata, null);
+    const metadata = ogg(buffer);
+    deepEqual(metadata, null);
     done();
   });
 });
 
-describe("id3", function () {
-  it("should read id3v2.4.0", function (done: (arg0: undefined) => void) {
-    const file = path.join(__dirname, "files", "id3v2.4.mp3");
-    fs.readFile(file, function (err: any, buffer: any) {
+describe("id3", () => {
+  it("should read id3v2.4.0", (done: (arg0: undefined) => void) => {
+    const file = join(__dirname, "files", "id3v2.4.mp3");
+    readFile(file, (err, buffer) => {
       if (err) {
         done(err);
         return;
       }
 
-      const metadata = metaDataReader.id3v2(buffer);
-      should.exist(metadata);
+      const metadata = id3v2(buffer);
+      exist(metadata);
       metadata.should.have.property("title", "Contra");
       metadata.should.have.property("artist", "Bill & Ted");
       metadata.should.have.property("album", "Konami");
@@ -87,18 +85,16 @@ describe("id3", function () {
     });
   });
 
-  it("should read messed up id3v2.4.0", function (done: (
-    arg0: undefined
-  ) => void) {
-    const file = path.join(__dirname, "files", "id3v2.4_wtf.mp3");
-    fs.readFile(file, function (err: any, buffer: any) {
+  it("should read messed up id3v2.4.0", (done: (arg0: undefined) => void) => {
+    const file = join(__dirname, "files", "id3v2.4_wtf.mp3");
+    readFile(file, (err, buffer) => {
       if (err) {
         done(err);
         return;
       }
 
-      const metadata = metaDataReader.id3v2(buffer);
-      should.exist(metadata);
+      const metadata = id3v2(buffer);
+      exist(metadata);
       metadata.should.have.property("title", "The Four Orbs");
       metadata.should.have.property("artist", "Tommy Montgomery");
       metadata.should.have.property("album", "Motif");
@@ -113,18 +109,16 @@ describe("id3", function () {
     });
   });
 
-  it("should read truncated id3v2.4.0", function (done: (
-    arg0: undefined
-  ) => void) {
-    const file = path.join(__dirname, "files", "truncated.mp3");
-    fs.readFile(file, function (err: any, buffer: any) {
+  it("should read truncated id3v2.4.0", (done: (arg0: undefined) => void) => {
+    const file = join(__dirname, "files", "truncated.mp3");
+    readFile(file, (err, buffer) => {
       if (err) {
         done(err);
         return;
       }
 
-      const metadata = metaDataReader.id3v2(buffer);
-      should.exist(metadata);
+      const metadata = id3v2(buffer);
+      exist(metadata);
       metadata.should.have.property("title", "Contra");
       metadata.should.have.property("artist", "Bill & Ted");
       metadata.should.have.property("album", "Konami");
@@ -135,16 +129,16 @@ describe("id3", function () {
     });
   });
 
-  it("should read id3v2.3.0", function (done: (arg0: undefined) => void) {
-    const file = path.join(__dirname, "files", "id3v2.3.mp3");
-    fs.readFile(file, function (err: any, buffer: any) {
+  it("should read id3v2.3.0", (done: (arg0: undefined) => void) => {
+    const file = join(__dirname, "files", "id3v2.3.mp3");
+    readFile(file, (err, buffer) => {
       if (err) {
         done(err);
         return;
       }
 
-      const metadata = metaDataReader.id3v2(buffer);
-      should.exist(metadata);
+      const metadata = id3v2(buffer);
+      exist(metadata);
       metadata.should.have.property("title", "Foobar");
       metadata.should.have.property("artist", "The Foobars");
       metadata.should.have.property("album", "FUBAR");
@@ -155,16 +149,16 @@ describe("id3", function () {
     });
   });
 
-  it("should read id3v1", function (done: (arg0: undefined) => void) {
-    const file = path.join(__dirname, "files", "id3v1.mp3");
-    fs.readFile(file, function (err: any, buffer: any) {
+  it("should read id3v1", (done: (arg0: undefined) => void) => {
+    const file = join(__dirname, "files", "id3v1.mp3");
+    readFile(file, (err, buffer) => {
       if (err) {
         done(err);
         return;
       }
 
-      const metadata = metaDataReader.id3v1(buffer);
-      should.exist(metadata);
+      const metadata = id3v1(buffer);
+      exist(metadata);
       metadata.should.have.property("title", "Foobar");
       metadata.should.have.property("artist", "The Foobars");
       metadata.should.have.property("album", "FUBAR");
@@ -176,18 +170,18 @@ describe("id3", function () {
     });
   });
 
-  it("should read id3v1 with 30-byte comment and no track", function (done: (
+  it("should read id3v1 with 30-byte comment and no track", (done: (
     arg0: undefined
-  ) => void) {
-    const file = path.join(__dirname, "files", "id3v1_notrack.mp3");
-    fs.readFile(file, function (err: any, buffer: any) {
+  ) => void) => {
+    const file = join(__dirname, "files", "id3v1_notrack.mp3");
+    readFile(file, (err, buffer) => {
       if (err) {
         done(err);
         return;
       }
 
-      const metadata = metaDataReader.id3v1(buffer);
-      should.exist(metadata);
+      const metadata = id3v1(buffer);
+      exist(metadata);
       metadata.should.have.property("title", "Foobar");
       metadata.should.have.property("artist", "The Foobars");
       metadata.should.have.property("album", "FUBAR");
@@ -202,17 +196,17 @@ describe("id3", function () {
     });
   });
 
-  it("should not explode if ID3v1 tags don't exist", function (done: () => void) {
+  it("should not explode if ID3v1 tags don't exist", (done: () => void) => {
     const buffer = new Buffer(1);
-    const metadata = metaDataReader.id3v1(buffer);
-    should.deepEqual(metadata, null);
+    const metadata = id3v1(buffer);
+    deepEqual(metadata, null);
     done();
   });
 
-  it("should not explode if ID3v2 tags don't exist", function (done: () => void) {
+  it("should not explode if ID3v2 tags don't exist", (done: () => void) => {
     const buffer = new Buffer(1);
-    const metadata = metaDataReader.id3v2(buffer);
-    should.deepEqual(metadata, null);
+    const metadata = id3v2(buffer);
+    deepEqual(metadata, null);
     done();
   });
 });

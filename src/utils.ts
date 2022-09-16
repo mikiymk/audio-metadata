@@ -1,17 +1,17 @@
-function toArrayBuffer(buffer: Buffer): ArrayBuffer {
+const toArrayBuffer = (buffer: Buffer): ArrayBuffer => {
   const arrayBuffer = new ArrayBuffer(buffer.length);
   const view = new Uint8Array(arrayBuffer);
   for (let i = 0; i < buffer.length; ++i) {
     view[i] = buffer[i];
   }
   return arrayBuffer;
-}
+};
 
-export function trimNull(s: string): string {
+export const trimNull = (s: string): string => {
   return s.replace(/\0+$/, "");
-}
+};
 
-export function createView(buffer: ArrayBufferLike): DataView {
+export const createView = (buffer: ArrayBufferLike): DataView => {
   if (typeof Buffer !== "undefined" && buffer instanceof Buffer) {
     //convert nodejs buffers to ArrayBuffer
     buffer = toArrayBuffer(buffer);
@@ -22,14 +22,14 @@ export function createView(buffer: ArrayBufferLike): DataView {
   }
 
   return new DataView(buffer);
-}
+};
 
-export function readBytes(
+export const readBytes = (
   view: DataView,
   offset: number,
   length: number,
   target?: DataView
-) {
+) => {
   if (offset + length < 0) {
     return [];
   }
@@ -45,13 +45,13 @@ export function readBytes(
   }
 
   return bytes;
-}
+};
 
-export function readAscii(
+export const readAscii = (
   view: DataView,
   offset: number,
   length: number
-): string {
+): string => {
   if (view.byteLength < offset + length) {
     return "";
   }
@@ -61,13 +61,13 @@ export function readAscii(
   }
 
   return s;
-}
+};
 
-export function readUtf8(
+export const readUtf8 = (
   view: DataView,
   offset: number,
   length: number
-): string {
+): string => {
   if (view.byteLength < offset + length) {
     return "";
   }
@@ -77,4 +77,4 @@ export function readUtf8(
   //http://stackoverflow.com/a/17192845 - convert byte array to UTF8 string
   const encodedString = String.fromCharCode(...new Uint8Array(buffer));
   return decodeURIComponent(escape(encodedString));
-}
+};

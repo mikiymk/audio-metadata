@@ -1,13 +1,13 @@
-import * as utils from "./utils";
+import { readBytes, createView, readAscii, readUtf8, trimNull } from "./utils";
 
-function checkMagicId3(view: any, offset: number) {
-  const id3Magic = utils.readBytes(view, offset, 3);
+const checkMagicId3 = (view: DataView, offset: number): boolean => {
+  const id3Magic = readBytes(view, offset, 3);
   //"ID3"
   return id3Magic[0] === 73 && id3Magic[1] === 68 && id3Magic[2] === 51;
-}
+};
 
-function getUint28(view: any, offset: number) {
-  const sizeBytes = utils.readBytes(view, offset, 4);
+const getUint28 = (view: DataView, offset: number): number => {
+  const sizeBytes = readBytes(view, offset, 4);
   const mask = 0xfffffff;
   return (
     ((sizeBytes[0] & mask) << 21) |
@@ -15,13 +15,15 @@ function getUint28(view: any, offset: number) {
     ((sizeBytes[2] & mask) << 7) |
     (sizeBytes[3] & mask)
   );
-}
+};
 
 //http://id3.org/id3v2.3.0
 //http://id3.org/id3v2.4.0-structure
 //http://id3.org/id3v2.4.0-frames
-export function id3v2 (buffer: any) {
-  const view = utils.createView(buffer);
+export const id3v2 = (
+  buffer: ArrayBufferLike
+): Record<string, string> | null => {
+  const view = createView(buffer);
   if (!checkMagicId3(view, 0)) {
     return null;
   }
@@ -40,9 +42,9 @@ export function id3v2 (buffer: any) {
     offset += getUint28(view, offset);
   }
 
-  function readFrame(offset: number) {
+  const readFrame = (offset: number) => {
     try {
-      const id = utils.readAscii(view, offset, 4);
+      const id = readAscii(view, offset, 4);
       const size = getUint28(view, offset + 4);
       offset += 10; //+2 more for flags we don't care about
 
@@ -60,23 +62,23 @@ export function id3v2 (buffer: any) {
         offset++;
         if (encoding === 3) {
           //UTF8 - null terminated
-          data = utils.readUtf8(view, offset, size - 1);
+          data = readUtf8(view, offset, size - 1);
         } else {
           //ISO-8859-1, UTF-16, UTF-16BE
           //UTF-16 and UTF-16BE are $FF $00 terminated
           //ISO is null terminated
 
           //screw these encodings, read it as ascii
-          data = utils.readAscii(view, offset, size - 1);
+          data = readAscii(view, offset, size - 1);
         }
       } else {
         //no encoding info, read it as ascii
-        data = utils.readAscii(view, offset, size);
+        data = readAscii(view, offset, size);
       }
 
       //id3v2.4 is supposed to have encoding terminations, but sometimes
       //they don't? meh.
-      data = utils.trimNull(data);
+      data = trimNull(data);
 
       return {
         id: id,
@@ -86,7 +88,7 @@ export function id3v2 (buffer: any) {
     } catch (e) {
       return null;
     }
-  }
+  };
 
   const idMap = {
     TALB: "album",

@@ -1,19 +1,19 @@
-import * as utils from "./utils";
+import { createView, readBytes, readUtf8, trimNull } from "./utils";
 
 /**
  * See http://www.ietf.org/rfc/rfc3533.txt
  * @param {Buffer|ArrayBuffer} buffer
  */
-export function ogg(buffer: any) {
-  const view = utils.createView(buffer);
+export const ogg = (buffer: ArrayBufferLike): Record<string, string> | null => {
+  const view = createView(buffer);
 
-  function parsePage(offset: number, withPacket?: boolean) {
+  const parsePage = (offset: number, withPacket?: boolean) => {
     if (view.byteLength < offset + 27) {
       return null;
     }
 
     const numPageSegments = view.getUint8(offset + 26),
-      segmentTable = utils.readBytes(view, offset + 27, numPageSegments),
+      segmentTable = readBytes(view, offset + 27, numPageSegments),
       headerSize = 27 + numPageSegments;
 
     if (!segmentTable.length) {
@@ -21,25 +21,22 @@ export function ogg(buffer: any) {
     }
 
     const pageSize =
-        headerSize +
-        segmentTable.reduce(function (cur: any, next: any) {
-          return cur + next;
-        }),
+        headerSize + segmentTable.reduce((cur, next) => cur + next),
       length = headerSize + 1 + "vorbis".length;
     let packetView = null;
 
     if (withPacket) {
-      packetView = utils.createView(new ArrayBuffer(pageSize - length));
-      utils.readBytes(view, offset + length, pageSize - length, packetView);
+      packetView = createView(new ArrayBuffer(pageSize - length));
+      readBytes(view, offset + length, pageSize - length, packetView);
     }
 
     return {
       pageSize: pageSize,
       packet: packetView,
     };
-  }
+  };
 
-  function parseComments(packet: DataView) {
+  const parseComments = (packet: DataView) => {
     try {
       const vendorLength = packet.getUint32(0, true),
         commentListLength = packet.getUint32(4 + vendorLength, true),
@@ -49,11 +46,11 @@ export function ogg(buffer: any) {
 
       for (let i = 0; i < commentListLength; i++) {
         const commentLength = packet.getUint32(offset, true),
-          comment = utils.readUtf8(packet, offset + 4, commentLength),
+          comment = readUtf8(packet, offset + 4, commentLength),
           equals = comment.indexOf("="),
           key = comment.substring(0, equals).toLowerCase();
 
-        comments[map[key] || key] = comments[key] = utils.trimNull(
+        comments[map[key] || key] = comments[key] = trimNull(
           comment.substring(equals + 1)
         );
         offset += 4 + commentLength;
@@ -64,7 +61,7 @@ export function ogg(buffer: any) {
       //all exceptions are just malformed/truncated data, so we just ignore them
       return null;
     }
-  }
+  };
 
   const id = parsePage(0);
   if (!id) {
@@ -77,4 +74,4 @@ export function ogg(buffer: any) {
   }
 
   return parseComments(commentHeader.packet);
-}
+};
