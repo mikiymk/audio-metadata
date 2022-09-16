@@ -15,8 +15,10 @@
     "type": "git",
     "url": "https://github.com/mikiymk/audio-metadata.git"
   },
+  "main": "dist/index.js",
   "files": [
-    "dist"
+    "dist",
+    "min"
   ],
   "license": "WTFPL",
   "devDependencies": {
