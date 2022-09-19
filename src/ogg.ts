@@ -1,4 +1,4 @@
-import { createView, readBytes, readUtf8, trimNull } from "./utils";
+import { createView, readBytes, readUtf8, splitTwo, trimNull } from "./utils";
 
 const parsePage = (view: DataView, offset: number): { pageSize: number; packet: DataView } | undefined => {
   if (view.byteLength < offset + 27) {
@@ -14,10 +14,9 @@ const parsePage = (view: DataView, offset: number): { pageSize: number; packet: 
   }
 
   const pageSize = headerSize + segmentTable.reduce((cur, next) => cur + next),
-    length = headerSize + 1 + "vorbis".length,
-    packet = createView(new Uint8Array(readBytes(view, offset + length, pageSize - length)));
+    length = headerSize + 7; // 1 + "vorbis".length,
 
-  return { pageSize, packet };
+  return { pageSize, packet: createView(readBytes(view, offset + length, pageSize - length)) };
 };
 
 const parseComments = (packet: DataView): Record<string, string> | undefined => {
@@ -30,10 +29,10 @@ const parseComments = (packet: DataView): Record<string, string> | undefined => 
     for (let i = 0, offset = 8 + vendorLength; i < commentListLength; i++) {
       const commentLength = packet.getUint32(offset, true),
         comment = readUtf8(packet, offset + 4, commentLength),
-        equals = comment.indexOf("="),
-        key = comment.substring(0, equals).toLowerCase();
+        [key, value] = splitTwo(comment, "="),
+        lowerKey = key.toLowerCase();
 
-      comments[map[key] || key] = comments[key] = trimNull(comment.substring(equals + 1));
+      comments[map[lowerKey] || lowerKey] = comments[lowerKey] = trimNull(value);
       offset += 4 + commentLength;
     }
 
@@ -62,9 +61,7 @@ export const ogg = (buffer: Uint8Array | ArrayBufferLike): Record<string, string
   }
 
   const commentHeader = parsePage(view, id.pageSize);
-  if (!commentHeader) {
-    return undefined;
+  if (commentHeader) {
+    return parseComments(commentHeader.packet);
   }
-
-  return parseComments(commentHeader.packet);
 };

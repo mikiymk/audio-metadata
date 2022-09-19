@@ -1,39 +1,49 @@
-import { readBytes, createView, readAscii, readUtf8, trimNull, readUtf16, readUtf16be } from "./utils";
-
-const checkMagicId3 = (view: DataView, offset: number): boolean => {
-  const id3Magic = readAscii(view, offset, 3);
-  //"ID3"
-  return id3Magic === "ID3";
-};
+import { readBytes, createView, readAscii, readUtf8, trimNull, readUtf16be, splitTwo, readString } from "./utils";
 
 const getUint28 = (view: DataView, offset: number): number => {
-  const sizeBytes = readBytes(view, offset, 4);
-  const mask = 0x0fff_ffff;
-  return ((sizeBytes[0] & mask) << 21) | ((sizeBytes[1] & mask) << 14) | ((sizeBytes[2] & mask) << 7) | (sizeBytes[3] & mask);
+  return readBytes(view, offset, 4).reduce((prev, curr) => (prev << 7) | (curr & 0x0fff_ffff), 0);
 };
 
-const getEncodingText = (view: DataView, offset: number, size: number) => {
-  switch (view.getUint8(offset - 1)) {
-    case 0:
-      // ISO-8859-1
-      return readAscii(view, offset, size - 1);
-
+const getEncodingText = (encoding: number) => {
+  switch (encoding) {
     case 1:
       // UTF-16 BOM
-      return readUtf16(view, offset, size - 1);
+      return (view: DataView, offset: number, length: number): string => {
+        if (view.getUint16(offset) === 0xfeff) {
+          return readUtf16be(view, offset, length);
+        } else {
+          return readString("utf16le")(view, offset, length);
+        }
+      };
 
     case 2:
       // UTF-16BE w/o BOM
-      return readUtf16be(view, offset, size - 1);
+      return readString("utf16be");
 
     case 3:
       //UTF8 - null terminated
-      return readUtf8(view, offset, size - 1);
+      return readUtf8;
 
+    case 0:
+    // ISO-8859-1
+
+    // fallthrough
     default:
       // no-encoding
-      return readAscii(view, offset - 1, size);
+      return readAscii;
   }
+};
+
+const IdMap: Record<string, string> = {
+  TALB: "album",
+  TCOM: "composer",
+  TIT1: "title",
+  TIT2: "title",
+  TPE1: "artist",
+  TRCK: "track",
+  TSSE: "encoder",
+  TDRC: "year",
+  TCON: "genre",
 };
 
 type ID3v2Frame = {
@@ -46,17 +56,13 @@ const readFrame = (view: DataView, offset: number): ID3v2Frame | undefined => {
   try {
     const id = readAscii(view, offset, 4);
     const size = 10 + getUint28(view, offset + 4);
-    offset += 10; //+2 more for flags we don't care about
+    //+2 more for flags we don't care about
 
-    if (id[0] !== "T") {
-      return { id, size };
-    }
-
-    const data = getEncodingText(view, offset + 1, size - 10);
+    const content = id[0] === "T" ? trimNull(getEncodingText(view.getUint8(offset + 9))(view, offset + 11, size - 11)) : undefined;
     //id3v2.4 is supposed to have encoding terminations, but sometimes
     //they don't? meh.
 
-    return { id, size, content: trimNull(data) };
+    return { id, size, content };
   } catch {
     return undefined;
   }
@@ -72,36 +78,18 @@ const readFrame = (view: DataView, offset: number): ID3v2Frame | undefined => {
  */
 export const id3v2 = (buffer: Uint8Array | ArrayBufferLike): Record<string, string> | undefined => {
   const view = createView(buffer);
-  if (!checkMagicId3(view, 0)) {
+  if (readAscii(view, 0, 3) !== "ID3") {
     return undefined;
   }
 
   //var majorVersion = view.getUint8(3);
   const flags = view.getUint8(5),
     size = getUint28(view, 6),
-    extendedHeader = (flags & 128) !== 0;
+    extendedHeader = !!(flags & 128),
+    frames: Record<string, string> = {},
+    extendedHeaderLength = extendedHeader ? getUint28(view, 10) : 0;
 
-  let extendedHeaderLength = 0;
-  if (extendedHeader) {
-    extendedHeaderLength = getUint28(view, 10);
-  }
-
-  const idMap: Record<string, string> = {
-    TALB: "album",
-    TCOM: "composer",
-    TIT1: "title",
-    TIT2: "title",
-    TPE1: "artist",
-    TRCK: "track",
-    TSSE: "encoder",
-    TDRC: "year",
-    TCON: "genre",
-  };
-
-  const endOfTags = 10 + extendedHeaderLength + size,
-    frames: Record<string, string> = {};
-  let offset = 10 + extendedHeaderLength;
-  while (offset < endOfTags) {
+  for (let offset = 10 + extendedHeaderLength; offset < 10 + extendedHeaderLength + size; ) {
     const frame = readFrame(view, offset);
     if (!frame) {
       break;
@@ -112,10 +100,10 @@ export const id3v2 = (buffer: Uint8Array | ArrayBufferLike): Record<string, stri
       continue;
     }
 
-    const id = idMap[frame.id] || frame.id;
+    const id = IdMap[frame.id] || frame.id;
     if (id === "TXXX") {
-      const nullByte = frame.content.indexOf("\0");
-      frames[frame.content.substring(0, nullByte)] = frame.content.substring(nullByte + 1);
+      const [key, value] = splitTwo(frame.content, "\0");
+      frames[key] = value;
     } else {
       frames[id] = frames[frame.id] = frame.content;
     }
