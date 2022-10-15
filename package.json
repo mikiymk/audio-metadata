@@ -25,12 +25,12 @@
   ],
   "license": "WTFPL",
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.37.0",
-    "eslint": "^8.23.1",
+    "@typescript-eslint/eslint-plugin": "^5.40.0",
+    "eslint": "^8.25.0",
     "prettier": "^2.7.1",
-    "typescript": "^4.8.3",
-    "vite": "^3.1.1",
-    "vitest": "^0.23.2"
+    "typescript": "^4.8.4",
+    "vite": "^3.1.8",
+    "vitest": "^0.24.3"
   },
   "scripts": {
     "test": "vitest run",

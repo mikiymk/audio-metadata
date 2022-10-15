@@ -19,7 +19,7 @@ const parsePage = (view: DataView, offset: number): { pageSize: number; packet: 
   return { pageSize, packet: createView(readBytes(view, offset + length, pageSize - length)) };
 };
 
-const parseComments = (packet: DataView): Record<string, string> | undefined => {
+export const parseComments = (packet: DataView): Record<string, string> | undefined => {
   try {
     const vendorLength = packet.getUint32(0, true),
       commentListLength = packet.getUint32(4 + vendorLength, true),
