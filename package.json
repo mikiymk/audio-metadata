@@ -1,6 +1,6 @@
 {
   "name": "@mikiymk/audio-metadata",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "Extract metadata from audio files",
   "keywords": [
     "id3",
