@@ -166,7 +166,7 @@ describe("flac", () => {
 
     expect(metadata).toBeTruthy();
     expect(metadata).toHaveProperty("title", "Common blackbird singing denoised");
-    expect(metadata).toHaveProperty("artist", "Common blackbird");
+    expect(metadata).toHaveProperty("artist", "common blackbird");
     expect(metadata).toHaveProperty("album", "Wikimedia Commons");
     expect(metadata).toHaveProperty("genre", "birdsing");
     expect(metadata).toHaveProperty("comment", "CC0");
