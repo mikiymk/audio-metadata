@@ -36,6 +36,7 @@
     "test": "vitest run",
     "build": "tsc",
     "start": "vite",
-    "minify": "vite build"
+    "minify": "vite build",
+    "format": "prettier src tests -w"
   }
 }
