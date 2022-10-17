@@ -34,16 +34,93 @@ const parseContentDescription = (view: DataView, offset: number) => {
   };
 };
 
-const parseExtendedContentDescription = (view: DataView, offset: number) => {
-  // todo
+const DescriptionMap: Record<string, string> = {
+  "wm/albumtitle": "album",
+};
 
-  return { b: "" };
+const parseExtendedContentDescription = (view: DataView, offset: number) => {
+  const descriptions: Record<string, string> = {};
+  const count = view.getUint16(offset, true);
+  offset += 2;
+
+  for (let i = 0; i < count; i++) {
+    const nameLen = view.getUint16(offset, true);
+    const name = readUtf16le(view, (offset += 2), nameLen)
+      .replace(/\0$/, "")
+      .toLowerCase();
+    const name2 = name.startsWith("wm/") ? name.slice(3) : name;
+    const name3 = DescriptionMap[name] || name;
+    const valueType = view.getUint16((offset += nameLen), true);
+    const valueLen = view.getUint16((offset += 2), true);
+
+    switch (valueType) {
+      case 0:
+        descriptions[name2] = descriptions[name3] = readUtf16le(view, (offset += 2), valueLen).replace(/\0$/, "");
+        break;
+
+      default:
+    }
+
+    offset += valueLen;
+  }
+
+  return descriptions;
 };
 
 const parseHeaderExtension = (view: DataView, offset: number) => {
   // todo
+  const dataSize = view.getUint32(offset + 18);
 
-  return { c: "" };
+  const descriptions: Record<string, string> = {};
+  offset += 22;
+
+  for (; offset < dataSize; ) {
+    switch (getHexString(view, offset)) {
+      case "EACBF8C5AF5B48778467AA8C44FA4CCA":
+      case "941C23449894D149A1411D134E457054":
+        // ASF Metadata Object: C5F8CBEA-5BAF-4877-8467-AA8C44FA4CCA
+        // ASF Metadata Library Object: 44231C94-9498-49D1-A141-1D134E457054
+        Object.assign(descriptions, parseMetadata(view, offset + 24));
+        break;
+
+      default:
+    }
+
+    offset += Number(view.getBigUint64(offset + 16, true));
+  }
+
+  return descriptions;
+};
+
+const parseMetadata = (view: DataView, offset: number) => {
+  const descriptions: Record<string, string> = {};
+  const count = view.getUint16(offset, true);
+  offset += 2;
+
+  for (let i = 0; i < count; i++) {
+    offset += 4; // reserved and stream number
+    const nameLen = view.getUint16(offset, true);
+    const valueType = view.getUint16((offset += 2), true);
+    const valueLen = view.getUint16((offset += 2), true);
+
+    const name = readUtf16le(view, (offset += 2), nameLen)
+      .replace(/\0$/, "")
+      .toLowerCase();
+    const name2 = name.startsWith("wm/") ? name.slice(3) : name;
+    const name3 = DescriptionMap[name] || name;
+
+    switch (valueType) {
+      case 0:
+        descriptions[name2] = descriptions[name3] = readUtf16le(view, (offset += nameLen), valueLen).replace(/\0$/, "");
+        break;
+
+      default:
+    }
+
+    offset += valueLen;
+  }
+
+  return descriptions;
 };
 
 /**
