@@ -1,6 +1,5 @@
 /**
- * See http://www.ietf.org/rfc/rfc3533.txt
- * @param buffer
+ * https://learn.microsoft.com/en-us/windows/win32/wmformat/overview-of-the-asf-format
  */
 
 import { createView, readUtf16le } from "./utils";
@@ -68,7 +67,6 @@ const parseExtendedContentDescription = (view: DataView, offset: number) => {
 };
 
 const parseHeaderExtension = (view: DataView, offset: number) => {
-  // todo
   const dataSize = view.getUint32(offset + 18);
 
   const descriptions: Record<string, string> = {};
