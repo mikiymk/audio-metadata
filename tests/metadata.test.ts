@@ -1,4 +1,4 @@
-import { ogg, id3v2, id3v1, flac } from "../src";
+import { ogg, id3v2, id3v1, flac, wma } from "../src";
 import { join } from "path";
 import { readFile } from "fs/promises";
 import { describe, expect, it } from "vitest";
@@ -175,6 +175,33 @@ describe("flac", () => {
   });
 
   it("should not explode if flac comments don't exist", async () => {
+    const buffer = Buffer.alloc(30);
+    const metadata = flac(buffer);
+    expect(metadata).toBeUndefined();
+  });
+});
+
+describe("wma", () => {
+  it("should read descriptions from wma", async () => {
+    const file = filePath("wma.wma");
+    const buffer = await readFile(file);
+
+    const metadata = wma(buffer);
+
+    expect(metadata).toBeTruthy();
+    expect(metadata).toHaveProperty("title", "sample1 wma");
+    expect(metadata).toHaveProperty("artist", "some artist");
+    expect(metadata).toHaveProperty("album", "any album");
+    expect(metadata).toHaveProperty("albumartist", "no album artist");
+    expect(metadata).toHaveProperty("composer", "it's composer");
+    expect(metadata).toHaveProperty("genre", "more genre");
+    expect(metadata).toHaveProperty("comment", "various comment");
+    expect(metadata).toHaveProperty("year", "1900");
+    expect(metadata).toHaveProperty("tracknumber", "10");
+    expect(metadata).toHaveProperty("track", "9");
+  });
+
+  it("should not explode if wma descriptions don't exist", async () => {
     const buffer = Buffer.alloc(30);
     const metadata = flac(buffer);
     expect(metadata).toBeUndefined();

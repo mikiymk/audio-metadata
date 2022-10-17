@@ -28,6 +28,9 @@ AudioMetaData.id3v1(buffer);
 
 // extract flac tags
 AudioMetaData.flac(buffer);
+
+// extract wma tags
+AudioMetaData.wma(buffer);
 ```
 
 The result is an object with the metadata. It attempts to normalize common keys:
