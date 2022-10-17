@@ -32,4 +32,5 @@ export const readString =
 
 export const readAscii = readString("ascii");
 export const readUtf8 = readString();
-export const readUtf16be = readString("utf16be");
+export const readUtf16be = readString("utf-16be");
+export const readUtf16le = readString("utf-16le");

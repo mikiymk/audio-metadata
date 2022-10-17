@@ -189,13 +189,16 @@ describe("wma", () => {
     const metadata = wma(buffer);
 
     expect(metadata).toBeTruthy();
-    expect(metadata).toHaveProperty("title", "Common blackbird singing denoised");
-    expect(metadata).toHaveProperty("artist", "common blackbird");
-    expect(metadata).toHaveProperty("album", "Wikimedia Commons");
-    expect(metadata).toHaveProperty("genre", "birdsing");
-    expect(metadata).toHaveProperty("comment", "CC0");
-    expect(metadata).toHaveProperty("date", "7 May 2013");
-    expect(metadata).toHaveProperty("tracknumber", "1");
+    expect(metadata).toHaveProperty("title", "sample1 wma");
+    expect(metadata).toHaveProperty("artist", "some artist");
+    expect(metadata).toHaveProperty("album", "any album");
+    expect(metadata).toHaveProperty("albumartist", "no album artist");
+    expect(metadata).toHaveProperty("composer", "it's composer");
+    expect(metadata).toHaveProperty("genre", "more genre");
+    expect(metadata).toHaveProperty("comment", "various comment");
+    expect(metadata).toHaveProperty("year", "1900");
+    expect(metadata).toHaveProperty("tracknumber", "10");
+    expect(metadata).toHaveProperty("track", "9");
   });
 
   it("should not explode if wma descriptions don't exist", async () => {
