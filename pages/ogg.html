@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Test Ogg</title>
+  </head>
+  <body>
+    <input type="file" name="audio" id="audio" />
+    <button id="load_button" onclick="load()">load file</button>
+
+    <script type="module">
+      import { ogg } from "../src/index.ts";
+
+      function load() {
+        var file_input = document.getElementById("audio");
+        var file = file_input.files[0];
+
+        var reader = new FileReader();
+        reader.onloadend = function (event) {
+          var arraybuffer = event.target.result;
+          var buffer = new Uint8Array(arraybuffer);
+
+          var data = ogg(buffer);
+
+          var pre = document.createElement("pre");
+          pre.appendChild(document.createTextNode(JSON.stringify(data, null, "  ")));
+          document.body.appendChild(pre);
+        };
+
+        reader.readAsArrayBuffer(file);
+      }
+
+      var loadButton = document.getElementById("load_button");
+      loadButton.onclick = load;
+    </script>
+  </body>
+</html>
