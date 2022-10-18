@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
             ogg: resolve(__dirname, "pages", "ogg.html"),
             flac: resolve(__dirname, "pages", "flac.html"),
             wma: resolve(__dirname, "pages", "wma.html"),
+            mp4: resolve(__dirname, "pages", "mp4.html"),
           },
         },
 

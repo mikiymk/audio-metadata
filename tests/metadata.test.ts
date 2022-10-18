@@ -216,6 +216,24 @@ describe("mp4", () => {
     const metadata = mp4(buffer);
 
     expect(metadata).toBeTruthy();
+    expect(metadata).toEqual([
+      {
+        data: new DataView(new ArrayBuffer(0)),
+        size: 6145,
+        type: "moov",
+      },
+      {
+        data: new DataView(new ArrayBuffer(0)),
+        size: 5721,
+        type: "trak",
+      },
+      {
+        data: new DataView(new ArrayBuffer(0)),
+        size: 5585,
+        type: "mdia",
+      },
+    ]);
+
     expect(metadata).toHaveProperty("title", "sample1 wma");
     expect(metadata).toHaveProperty("artist", "some artist");
     expect(metadata).toHaveProperty("album", "any album");
