@@ -5,7 +5,7 @@
  * https://github.com/sannies/mp4parser/
  */
 
-import { createView, readAscii, readBytes } from "./utils";
+import { createView, readAscii, readBytes, readUtf16be, readUtf8 } from "./utils";
 
 // moov trak mdia udta
 // + meta
@@ -27,7 +27,7 @@ const parseAtom = (view: DataView, offset: number): Atom | undefined => {
 
     return {
       size,
-      type: readAscii(view, offset + 4, 4),
+      type: readAscii(view, offset + 4, 4).toLowerCase(),
       data: createView(readBytes(view, offset + headerSize, size - headerSize)),
     };
   } catch {
@@ -47,10 +47,49 @@ const parseAtomList = function* (view: DataView): Generator<Atom> {
   }
 };
 
-type Metadata = unknown;
+const TypeMap: Record<string, string> = {
+  "©alb": "album",
+  "©wrt": "composer",
+  "©nam": "title",
+  "©art": "artist",
+  aart: "albumartist",
+  "©cmt": "comment",
+  trkn: "track",
+  "©too": "encoder",
+  "©day": "year",
+  "©gen": "genre",
+  gnre: "genre",
+};
 
-const parseAtoms = (view: DataView): Metadata[] => {
-  const metadatas: Metadata[] = [];
+const parseItem = (view: DataView): string | undefined => {
+  const data = [...parseAtomList(view)].find((value) => value.type === "data");
+
+  if (data) {
+    switch (data.data.getUint32(0)) {
+      case 1:
+      case 4:
+        return readUtf8(data.data, 8, data.data.byteLength - 8);
+      case 2:
+      case 5:
+        return readUtf16be(data.data, 8, data.data.byteLength - 8);
+    }
+  }
+};
+const parseItemList = (view: DataView): Record<string, string> => {
+  const metadatas: Record<string, string> = {};
+
+  for (const atom of parseAtomList(view)) {
+    Object.assign(metadatas, {
+      [atom.type]: parseItem(atom.data),
+      [TypeMap[atom.type] || atom.type]: parseItem(atom.data),
+    });
+  }
+
+  return metadatas;
+};
+
+const parseAtoms = (view: DataView): Record<string, string> => {
+  const metadatas: Record<string, string> = {};
 
   for (const atom of parseAtomList(view)) {
     switch (atom.type) {
@@ -58,16 +97,18 @@ const parseAtoms = (view: DataView): Metadata[] => {
       case "trak":
       case "mdia":
       case "udta":
-      case "ilst":
-        metadatas.push(atom, parseAtoms(atom.data));
+        Object.assign(metadatas, parseAtoms(atom.data));
         break;
 
       case "meta":
-        metadatas.push(atom, parseAtoms(metaBoxShift(atom.data)));
+        Object.assign(metadatas, parseAtoms(metaBoxShift(atom.data)));
+        break;
+
+      case "ilst":
+        Object.assign(metadatas, parseItemList(atom.data));
         break;
 
       default:
-        metadatas.push(atom);
     }
   }
 
@@ -94,5 +135,5 @@ export const mp4 = (buffer: Uint8Array | ArrayBufferLike): Record<string, string
 
   const metadata = parseAtoms(view);
 
-  return metadata;
+  return Object.keys(metadata).length === 0 ? undefined : metadata;
 };

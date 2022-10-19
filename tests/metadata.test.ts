@@ -216,34 +216,12 @@ describe("mp4", () => {
     const metadata = mp4(buffer);
 
     expect(metadata).toBeTruthy();
-    expect(metadata).toEqual([
-      {
-        data: new DataView(new ArrayBuffer(0)),
-        size: 6145,
-        type: "moov",
-      },
-      {
-        data: new DataView(new ArrayBuffer(0)),
-        size: 5721,
-        type: "trak",
-      },
-      {
-        data: new DataView(new ArrayBuffer(0)),
-        size: 5585,
-        type: "mdia",
-      },
-    ]);
-
-    expect(metadata).toHaveProperty("title", "sample1 wma");
-    expect(metadata).toHaveProperty("artist", "some artist");
-    expect(metadata).toHaveProperty("album", "any album");
-    expect(metadata).toHaveProperty("albumartist", "no album artist");
-    expect(metadata).toHaveProperty("composer", "it's composer");
-    expect(metadata).toHaveProperty("genre", "more genre");
-    expect(metadata).toHaveProperty("comment", "various comment");
-    expect(metadata).toHaveProperty("year", "1900");
-    expect(metadata).toHaveProperty("tracknumber", "10");
-    expect(metadata).toHaveProperty("track", "9");
+    expect(metadata).toHaveProperty("title", "Symphony No.6 (1st movement)");
+    expect(metadata).toHaveProperty("artist", "Ludwig van Beethoven");
+    expect(metadata).toHaveProperty("album", "www.mfiles.co.uk");
+    expect(metadata).toHaveProperty("encoder", "Lavf57.83.100");
+    expect(metadata).toHaveProperty("genre", "Classical");
+    expect(metadata).toHaveProperty("comment", "\ufffd Music Files Ltd");
   });
 
   it("should not explode if mp4 descriptions don't exist", async () => {
