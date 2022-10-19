@@ -1,4 +1,4 @@
-import { ogg, id3v2, id3v1, flac, wma } from "../src";
+import { ogg, id3v2, id3v1, flac, wma, mp4 } from "../src";
 import { join } from "path";
 import { readFile } from "fs/promises";
 import { describe, expect, it } from "vitest";
@@ -203,7 +203,30 @@ describe("wma", () => {
 
   it("should not explode if wma descriptions don't exist", async () => {
     const buffer = Buffer.alloc(30);
-    const metadata = flac(buffer);
+    const metadata = wma(buffer);
+    expect(metadata).toBeUndefined();
+  });
+});
+
+describe("mp4", () => {
+  it("should read descriptions from mp4", async () => {
+    const file = filePath("mp4.mp4");
+    const buffer = await readFile(file);
+
+    const metadata = mp4(buffer);
+
+    expect(metadata).toBeTruthy();
+    expect(metadata).toHaveProperty("title", "Symphony No.6 (1st movement)");
+    expect(metadata).toHaveProperty("artist", "Ludwig van Beethoven");
+    expect(metadata).toHaveProperty("album", "www.mfiles.co.uk");
+    expect(metadata).toHaveProperty("encoder", "Lavf57.83.100");
+    expect(metadata).toHaveProperty("genre", "Classical");
+    expect(metadata).toHaveProperty("comment", "\ufffd Music Files Ltd");
+  });
+
+  it("should not explode if mp4 descriptions don't exist", async () => {
+    const buffer = Buffer.alloc(30);
+    const metadata = mp4(buffer);
     expect(metadata).toBeUndefined();
   });
 });

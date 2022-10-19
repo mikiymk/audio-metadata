@@ -35,7 +35,7 @@
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
-    "start": "vite",
+    "start": "vite --mode=pages",
     "minify": "vite build",
     "minify-html": "vite build --mode=pages",
     "format": "prettier src tests -w"

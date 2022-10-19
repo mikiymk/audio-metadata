@@ -31,6 +31,9 @@ AudioMetaData.flac(buffer);
 
 // extract wma tags
 AudioMetaData.wma(buffer);
+
+// extract mp4 tags
+AudioMetaData.mp4(buffer);
 ```
 
 The result is an object with the metadata. It attempts to normalize common keys:
