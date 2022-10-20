@@ -1,37 +1,39 @@
-import { readBytes, createView, readAscii, readUtf8, trimNull, readUtf16be, splitTwo, readString } from "./utils";
+import { createReaderView, EncAscii, EncUtf16be, EncUtf16le, EncUtf8, getBytes, getString, getUint, moveRel, peek, ReaderView } from "./reader";
+import { trimNull, splitTwo } from "./utils";
 
-const getUint28 = (view: DataView, offset: number): number => {
-  return readBytes(view, offset, 4).reduce((prev, curr) => (prev << 7) | (curr & 0x0fff_ffff), 0);
+const getUint28 = (view: ReaderView): number => {
+  return getBytes(view, 4).reduce((prev, curr) => (prev << 7) | (curr & 0x7f), 0);
 };
 
-const getEncodingText = (encoding: number) => {
+const getEncodingText = (view: ReaderView, size: number) => {
+  const encoding = getUint(view, 1);
+
+  let encLabel = EncUtf8;
   switch (encoding) {
     case 1:
       // UTF-16 BOM
-      return (view: DataView, offset: number, length: number): string => {
-        if (view.getUint16(offset) === 0xfeff) {
-          return readUtf16be(view, offset, length);
-        } else {
-          return readString("utf16le")(view, offset, length);
-        }
-      };
+      if (peek(getUint)(view, 2) === 0xfeff) {
+        encLabel = EncUtf16be;
+      } else {
+        encLabel = EncUtf16le;
+      }
+      break;
 
     case 2:
       // UTF-16BE w/o BOM
-      return readString("utf16be");
-
-    case 3:
-      //UTF8 - null terminated
-      return readUtf8;
+      encLabel = EncUtf16be;
+      break;
 
     case 0:
-    // ISO-8859-1
+      // ISO-8859-1
+      encLabel = EncAscii;
+      break;
 
-    // fallthrough
     default:
-      // no-encoding
-      return readAscii;
+    // UTF-8 - null terminated
   }
+
+  return getString(view, size - 1, encLabel);
 };
 
 const IdMap: Record<string, string> = {
@@ -48,21 +50,21 @@ const IdMap: Record<string, string> = {
 
 type ID3v2Frame = {
   id: string;
-  size: number;
   content?: string;
 };
 
-const readFrame = (view: DataView, offset: number): ID3v2Frame | undefined => {
+const readFrame = (view: ReaderView): ID3v2Frame | undefined => {
   try {
-    const id = readAscii(view, offset, 4);
-    const size = 10 + getUint28(view, offset + 4);
+    const id = getString(view, 4, EncAscii);
+    const size = getUint28(view);
     //+2 more for flags we don't care about
+    moveRel(view, 2);
 
-    const content = id[0] === "T" ? trimNull(getEncodingText(view.getUint8(offset + 9))(view, offset + 11, size - 11)) : undefined;
+    const content = id[0] === "T" ? trimNull(getEncodingText(view, size)) : (moveRel(view, size), undefined);
     //id3v2.4 is supposed to have encoding terminations, but sometimes
     //they don't? meh.
 
-    return { id, size, content };
+    return { id, content };
   } catch {
     return undefined;
   }
@@ -77,25 +79,26 @@ const readFrame = (view: DataView, offset: number): ID3v2Frame | undefined => {
  * @returns ID3v2 object on success, undefined on failure
  */
 export const id3v2 = (buffer: Uint8Array | ArrayBufferLike): Record<string, string> | undefined => {
-  const view = createView(buffer);
-  if (readAscii(view, 0, 3) !== "ID3") {
+  const view = createReaderView(buffer);
+  if (getString(view, 3, EncAscii) !== "ID3") {
     return undefined;
   }
 
-  //var majorVersion = view.getUint8(3);
-  const flags = view.getUint8(5),
-    size = getUint28(view, 6),
+  // const majorVersion = getUint(view, 1);
+  // const revisionVersion = getUint(view, 1);
+  const flags = (moveRel(view, 2), getUint(view, 1)),
+    size = getUint28(view),
     extendedHeader = !!(flags & 128),
     frames: Record<string, string> = {},
-    extendedHeaderLength = extendedHeader ? getUint28(view, 10) : 0;
+    extendedHeaderLength = extendedHeader ? getUint28(view) : 0;
+  moveRel(view, extendedHeaderLength);
 
-  for (let offset = 10 + extendedHeaderLength; offset < 10 + extendedHeaderLength + size; ) {
-    const frame = readFrame(view, offset);
+  for (; view.position < 10 + extendedHeaderLength + size; ) {
+    const frame = readFrame(view);
     if (!frame) {
       break;
     }
 
-    offset += frame.size;
     if (!frame.content) {
       continue;
     }

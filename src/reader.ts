@@ -93,3 +93,12 @@ export const getBytes = (reader: ReaderView, length: number): Uint8Array => {
 
   return new Uint8Array(view.buffer.slice(position, position + length));
 };
+
+export const peek =
+  <Getter extends (reader: ReaderView, ...rest: never[]) => unknown>(getter: Getter, moveLength = 0) =>
+  (...params: Parameters<Getter>): ReturnType<Getter> => {
+    const [{ view, position }, ...rest] = params;
+    const value = getter({ view, position: position + moveLength }, ...(rest as never[]));
+
+    return value as ReturnType<Getter>;
+  };

@@ -1,4 +1,4 @@
-import { createReaderView, EncAscii, getString, getUint, moveAbs, moveRel, ReaderView } from "./reader";
+import { createReaderView, EncAscii, getString, getUint, moveAbs, peek, ReaderView } from "./reader";
 import { trimNull } from "./utils";
 
 const checkMagicId3v1 = (view: ReaderView): boolean => {
@@ -32,9 +32,7 @@ export const id3v1 = (buffer: Uint8Array | ArrayBufferLike): ID3v1 | undefined =
     }
 
     //next byte is the track
-    moveRel(view, 122);
-    const hasTrack = getUint(view, 1) === 0;
-    moveRel(view, -123);
+    const hasTrack = peek(getUint, 122)(view, 1) === 0;
 
     return {
       title: trimNull(getString(view, 30, EncAscii)),
