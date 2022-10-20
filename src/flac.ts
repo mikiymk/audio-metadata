@@ -27,7 +27,7 @@ export const flac = (buffer: Uint8Array | ArrayBufferLike): Record<string, strin
 
     if ((type & 0x7f) == 4) {
       // vorbis comment
-      comment = Object.assign(comment, parseComments(getView(view, length)));
+      comment = { ...comment, ...parseComments(getView(view, length)) };
     } else {
       moveRel(view, length);
     }

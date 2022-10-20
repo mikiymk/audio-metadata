@@ -82,24 +82,23 @@ const parseItem = (view: ReaderView): string | undefined => {
 };
 
 const parseItemList = (view: ReaderView): Record<string, string> => {
-  const metadatas: Record<string, string> = {};
+  let metadatas: Record<string, string> = {};
 
   for (const { data, type } of parseAtomList(view)) {
     const item = parseItem(data);
-    Object.assign(metadatas, {
-      [type]: item,
-      [TypeMap[type] || type]: item,
-    });
+    if (item) {
+      metadatas = { ...metadatas, [type]: item, [TypeMap[type] || type]: item };
+    }
   }
 
   return metadatas;
 };
 
 const parseAtoms = (view: ReaderView): Record<string, string> => {
-  const metadatas: Record<string, string> = {};
+  let metadatas: Record<string, string> = {};
 
   for (const { type, data } of parseAtomList(view)) {
-    Object.assign(metadatas, atomsDetailParsers[type]?.(data));
+    metadatas = { ...metadatas, ...atomsDetailParsers[type]?.(data) };
   }
 
   return metadatas;

@@ -74,7 +74,7 @@ const parseExtendedContentDescription = (view: ReaderView) => {
 
 const parseHeaderExtension = (view: ReaderView) => {
   moveRel(view, 22);
-  const descriptions: Record<string, string> = {};
+  let descriptions: Record<string, string> = {};
 
   let object;
   while ((object = parseAsfObject(view))) {
@@ -84,7 +84,7 @@ const parseHeaderExtension = (view: ReaderView) => {
       // ASF Metadata Library Object: 44231C94-9498-49D1-A141-1D134E457054
       G941C23449894D149A1411D134E457054: parseMetadata,
     };
-    Object.assign(descriptions, parserObjects[object.guid]?.(object.data));
+    descriptions = { ...descriptions, ...parserObjects[object.guid]?.(object.data) };
   }
 
   return descriptions;
@@ -128,7 +128,6 @@ export const wma = (buffer: Uint8Array | ArrayBufferLike): Record<string, string
   try {
     // ASF Header Object: 75B22630-668E-11CF-A6D9-00AA0062CE6C
     const header = parseAsfObject(view);
-    const descriptions: Record<string, string> = {};
 
     if (!header || header.guid !== "G3026B2758E66CF11A6D900AA0062CE6C") {
       return undefined;
@@ -136,6 +135,7 @@ export const wma = (buffer: Uint8Array | ArrayBufferLike): Record<string, string
 
     moveRel(header.data, 6);
     let object;
+    let descriptions: Record<string, string> = {};
     while ((object = parseAsfObject(header.data))) {
       const parserObjects: Record<string, (view: ReaderView) => Record<string, string>> = {
         // ASF Content Description Object: 75B22633-668E-11CF-A6D9-00AA0062CE6C
@@ -145,7 +145,7 @@ export const wma = (buffer: Uint8Array | ArrayBufferLike): Record<string, string
         // ASF Header Extension Object: 5FBF03B5-A92E-11CF-8EE3-00C00C205365
         GB503BF5F2EA9CF118EE300C00C205365: parseHeaderExtension,
       };
-      Object.assign(descriptions, parserObjects[object.guid]?.(object.data));
+      descriptions = { ...descriptions, ...parserObjects[object.guid]?.(object.data) };
     }
 
     return descriptions;
