@@ -6,34 +6,22 @@ const getUint28 = (view: ReaderView): number => {
 };
 
 const getEncodingText = (view: ReaderView, size: number) => {
-  const encoding = getUint(view, 1);
-
-  let encLabel = EncUtf8;
-  switch (encoding) {
-    case 1:
-      // UTF-16 BOM
-      if (peek(getUint)(view, 2) === 0xfeff) {
-        encLabel = EncUtf16be;
-      } else {
-        encLabel = EncUtf16le;
-      }
-      break;
-
-    case 2:
-      // UTF-16BE w/o BOM
-      encLabel = EncUtf16be;
-      break;
-
-    case 0:
+  return getString(
+    view,
+    size - 1,
+    {
       // ISO-8859-1
-      encLabel = EncAscii;
-      break;
+      0: EncAscii,
 
-    default:
-    // UTF-8 - null terminated
-  }
+      // UTF-16 BOM
+      1: peek(getUint)(view, 2) === 0xfeff ? EncUtf16be : EncUtf16le,
 
-  return getString(view, size - 1, encLabel);
+      // UTF-16BE w/o BOM
+      2: EncUtf16be,
+    }[getUint(view, 1)] ??
+      // UTF-8 - null terminated
+      EncUtf8
+  );
 };
 
 const IdMap: Record<string, string> = {

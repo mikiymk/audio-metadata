@@ -69,14 +69,15 @@ const parseItem = (view: ReaderView): string | undefined => {
     const itemData = data.data;
     const type = getUint(itemData, 4);
     moveRel(itemData, 4);
-    switch (type) {
-      case 1:
-      case 4:
-        return getString(itemData, restLength(itemData), EncUtf8);
-      case 2:
-      case 5:
-        return getString(itemData, restLength(itemData), EncUtf16be);
-    }
+
+    const encode = {
+      1: EncUtf8,
+      2: EncUtf16be,
+      4: EncUtf8,
+      5: EncUtf16be,
+    }[type];
+
+    return encode && getString(itemData, restLength(itemData), encode);
   }
 };
 
@@ -98,27 +99,19 @@ const parseAtoms = (view: ReaderView): Record<string, string> => {
   const metadatas: Record<string, string> = {};
 
   for (const { type, data } of parseAtomList(view)) {
-    switch (type) {
-      case "moov":
-      case "trak":
-      case "mdia":
-      case "udta":
-        Object.assign(metadatas, parseAtoms(data));
-        break;
-
-      case "meta":
-        Object.assign(metadatas, parseAtoms(metaBoxShift(data)));
-        break;
-
-      case "ilst":
-        Object.assign(metadatas, parseItemList(data));
-        break;
-
-      default:
-    }
+    Object.assign(metadatas, atomsDetailParsers[type]?.(data));
   }
 
   return metadatas;
+};
+
+const atomsDetailParsers: Record<string, (view: ReaderView) => Record<string, string>> = {
+  moov: parseAtoms,
+  trak: parseAtoms,
+  mdia: parseAtoms,
+  udta: parseAtoms,
+  meta: (data: ReaderView) => parseAtoms(metaBoxShift(data)),
+  ilst: parseItemList,
 };
 
 const metaBoxShift = (view: ReaderView): ReaderView => {

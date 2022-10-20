@@ -6,7 +6,7 @@ import { createReaderView, EncUtf16le, getBytes, getString, getUint, getView, mo
 import { trimNull } from "./utils";
 
 const getHexString = (view: ReaderView): string => {
-  return getBytes(view, 16).reduce((prev, curr) => prev + curr.toString(16).padStart(2, "0").toUpperCase(), "");
+  return "G" + getBytes(view, 16).reduce((prev, curr) => prev + curr.toString(16).padStart(2, "0").toUpperCase(), "");
 };
 
 interface AsfObject {
@@ -78,16 +78,13 @@ const parseHeaderExtension = (view: ReaderView) => {
 
   let object;
   while ((object = parseAsfObject(view))) {
-    switch (object.guid) {
-      case "EACBF8C5AF5B48778467AA8C44FA4CCA":
-      case "941C23449894D149A1411D134E457054":
-        // ASF Metadata Object: C5F8CBEA-5BAF-4877-8467-AA8C44FA4CCA
-        // ASF Metadata Library Object: 44231C94-9498-49D1-A141-1D134E457054
-        Object.assign(descriptions, parseMetadata(object.data));
-        break;
-
-      default:
-    }
+    const parserObjects: Record<string, (view: ReaderView) => Record<string, string>> = {
+      // ASF Metadata Object: C5F8CBEA-5BAF-4877-8467-AA8C44FA4CCA
+      GEACBF8C5AF5B48778467AA8C44FA4CCA: parseMetadata,
+      // ASF Metadata Library Object: 44231C94-9498-49D1-A141-1D134E457054
+      G941C23449894D149A1411D134E457054: parseMetadata,
+    };
+    Object.assign(descriptions, parserObjects[object.guid]?.(object.data));
   }
 
   return descriptions;
@@ -133,35 +130,23 @@ export const wma = (buffer: Uint8Array | ArrayBufferLike): Record<string, string
     const header = parseAsfObject(view);
     const descriptions: Record<string, string> = {};
 
-    if (!header || header.guid !== "3026B2758E66CF11A6D900AA0062CE6C") {
+    if (!header || header.guid !== "G3026B2758E66CF11A6D900AA0062CE6C") {
       return undefined;
     }
 
     moveRel(header.data, 6);
     let object;
     while ((object = parseAsfObject(header.data))) {
-      switch (object.guid) {
-        case "3326B2758E66CF11A6D900AA0062CE6C":
-          // ASF Content Description Object: 75B22633-668E-11CF-A6D9-00AA0062CE6C
-          Object.assign(descriptions, parseContentDescription(object.data));
-          break;
-
-        case "40A4D0D207E3D21197F000A0C95EA850":
-          // ASF Extended Content Description Object: D2D0A440-E307-11D2-97F0-00A0C95EA850
-          Object.assign(descriptions, parseExtendedContentDescription(object.data));
-          break;
-
-        case "B503BF5F2EA9CF118EE300C00C205365":
-          // ASF Header Extension Object: 5FBF03B5-A92E-11CF-8EE3-00C00C205365
-          Object.assign(descriptions, parseHeaderExtension(object.data));
-          break;
-
-        default:
-      }
+      const parserObjects: Record<string, (view: ReaderView) => Record<string, string>> = {
+        // ASF Content Description Object: 75B22633-668E-11CF-A6D9-00AA0062CE6C
+        G3326B2758E66CF11A6D900AA0062CE6C: parseContentDescription,
+        // ASF Extended Content Description Object: D2D0A440-E307-11D2-97F0-00A0C95EA850
+        G40A4D0D207E3D21197F000A0C95EA850: parseExtendedContentDescription,
+        // ASF Header Extension Object: 5FBF03B5-A92E-11CF-8EE3-00C00C205365
+        GB503BF5F2EA9CF118EE300C00C205365: parseHeaderExtension,
+      };
+      Object.assign(descriptions, parserObjects[object.guid]?.(object.data));
     }
-
-    // ASF Metadata Object: C5F8CBEA-5BAF-4877-8467-AA8C44FA4CCA
-    // ASF Metadata Library Object: 44231C94-9498-49D1-A141-1D134E457054
 
     return descriptions;
   } catch (error) {

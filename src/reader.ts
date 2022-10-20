@@ -41,44 +41,27 @@ export const restLength = (reader: ReaderView): number => {
 
 export const getUint = (reader: ReaderView, length: 1 | 2 | 4 | 8, littleEndian = false): number => {
   const { view, position } = moveRel(reader, length);
-
-  switch (length) {
-    case 1:
-      return view.getUint8(position);
-
-    case 2:
-      return view.getUint16(position, littleEndian);
-
-    case 4:
-      return view.getUint32(position, littleEndian);
-
-    case 8:
-      return Number(view.getBigUint64(position, littleEndian));
-
-    default:
-      throw new RangeError("length is limited to 1, 2, 4 or 8");
-  }
+  return Number(
+    {
+      1: (position: number) => view.getUint8(position),
+      2: (position: number, littleEndian: boolean) => view.getUint16(position, littleEndian),
+      4: (position: number, littleEndian: boolean) => view.getUint32(position, littleEndian),
+      8: (position: number, littleEndian: boolean) => view.getBigUint64(position, littleEndian),
+    }[length](position, littleEndian)
+  );
 };
 
 export const getInt = (reader: ReaderView, length: 1 | 2 | 4 | 8, littleEndian = false): number => {
   const { view, position } = moveRel(reader, length);
 
-  switch (length) {
-    case 1:
-      return view.getInt8(position);
-
-    case 2:
-      return view.getInt16(position, littleEndian);
-
-    case 4:
-      return view.getInt32(position, littleEndian);
-
-    case 8:
-      return Number(view.getBigInt64(position, littleEndian));
-
-    default:
-      throw new RangeError("length is limited to 1, 2, 4 or 8");
-  }
+  return Number(
+    {
+      1: (position: number) => view.getInt8(position),
+      2: (position: number, littleEndian: boolean) => view.getInt16(position, littleEndian),
+      4: (position: number, littleEndian: boolean) => view.getInt32(position, littleEndian),
+      8: (position: number, littleEndian: boolean) => view.getBigInt64(position, littleEndian),
+    }[length](position, littleEndian)
+  );
 };
 
 const getArrayBuffer = (reader: ReaderView, length: number): ArrayBufferLike => {
