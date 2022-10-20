@@ -4,12 +4,7 @@
  */
 
 import { parseComments } from "./ogg";
-import { createView, readAscii, readBytes } from "./utils";
-
-const checkMagicFlac = (view: DataView): boolean => {
-  const magic = readAscii(view, 0, 4);
-  return magic === "fLaC";
-};
+import { createReaderView, EncAscii, getBytes, getString, getUint, moveRel } from "./reader";
 
 /**
  * Read the flac METADATA_BLOCK_VORBIS_COMMENT from the buffer if it can be read.
@@ -17,25 +12,25 @@ const checkMagicFlac = (view: DataView): boolean => {
  * @returns Vorbis Comment object on success, undefined on failure
  */
 export const flac = (buffer: Uint8Array | ArrayBufferLike): Record<string, string> | undefined => {
-  const view = createView(buffer);
+  const view = createReaderView(buffer);
 
-  if (!checkMagicFlac(view)) return undefined;
+  if (getString(view, 4, EncAscii) !== "fLaC") return undefined;
 
-  let offset = 4;
   let reachEnd = false;
   let comment: Record<string, string> = {};
 
   while (!reachEnd) {
-    const type = view.getUint8(offset);
-    const length = view.getUint16(offset + 1) * 2 ** 16 + view.getUint8(offset + 3);
+    const type = getUint(view, 1);
+    const length = getUint(view, 2) * 2 ** 8 + getUint(view, 1);
 
     reachEnd = type > 0x7f;
 
-    if ((type & 0b0111_1111) == 4) {
+    if ((type & 0x7f) == 4) {
       // vorbis comment
-      comment = Object.assign(comment, parseComments(createView(readBytes(view, offset + 4, length))));
+      comment = Object.assign(comment, parseComments(createReaderView(getBytes(view, length))));
+    } else {
+      moveRel(view, length);
     }
-    offset += 4 + length;
   }
 
   return comment;
