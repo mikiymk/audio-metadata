@@ -35,6 +35,10 @@ export const moveAbs = (reader: ReaderView, newPosition: number): ReaderView => 
   return { view, position };
 };
 
+export const restLength = (reader: ReaderView): number => {
+  return reader.view.byteLength - reader.position;
+};
+
 export const getUint = (reader: ReaderView, length: 1 | 2 | 4 | 8, littleEndian = false): number => {
   const { view, position } = moveRel(reader, length);
 

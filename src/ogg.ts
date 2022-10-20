@@ -1,44 +1,48 @@
-import { createView, readBytes, readUtf8, splitTwo, trimNull } from "./utils";
+import { createReaderView, getBytes, getString, getUint, moveRel, ReaderView, restLength } from "./reader";
+import { splitTwo, trimNull } from "./utils";
 
-const parsePage = (view: DataView, offset: number): { pageSize: number; packet: DataView } | undefined => {
-  if (view.byteLength < offset + 27) {
+interface Page {
+  pageSize: number;
+  packet: ReaderView;
+}
+
+const parsePage = (view: ReaderView): Page | undefined => {
+  if (restLength(view) < 27) {
     return undefined;
   }
 
-  const numPageSegments = view.getUint8(offset + 26),
-    segmentTable = readBytes(view, offset + 27, numPageSegments),
-    headerSize = 27 + numPageSegments;
+  const segmentsSize = (moveRel(view, 26), getUint(view, 1)),
+    segmentTable = getBytes(view, segmentsSize);
 
   if (!segmentTable.length) {
     return undefined;
   }
 
-  const pageSize = headerSize + segmentTable.reduce((cur, next) => cur + next),
-    length = headerSize + 7; // 1 + "vorbis".length,
+  const pageSize = segmentTable.reduce((cur, next) => cur + next);
 
-  return { pageSize, packet: createView(readBytes(view, offset + length, pageSize - length)) };
+  // 7 = 1 + "vorbis".length,
+  return moveRel(view, 7), { pageSize: pageSize + 27 + segmentsSize, packet: createReaderView(getBytes(view, pageSize - 7)) };
 };
 
-export const parseComments = (packet: DataView): Record<string, string> | undefined => {
+export const parseComments = (packet: ReaderView): Record<string, string> | undefined => {
   try {
-    const vendorLength = packet.getUint32(0, true),
-      commentListLength = packet.getUint32(4 + vendorLength, true),
+    const vendorLength = getUint(packet, 4, true),
+      commentListLength = (moveRel(packet, vendorLength), getUint(packet, 4, true)),
       comments: Record<string, string> = {},
       map: Record<string, string> = { tracknumber: "track" };
 
-    for (let i = 0, offset = 8 + vendorLength; i < commentListLength; i++) {
-      const commentLength = packet.getUint32(offset, true),
-        comment = readUtf8(packet, offset + 4, commentLength),
+    for (let i = 0; i < commentListLength; i++) {
+      const commentLength = getUint(packet, 4, true),
+        comment = getString(packet, commentLength),
         [key, value] = splitTwo(comment, "="),
         lowerKey = key.toLowerCase();
 
       comments[map[lowerKey] || lowerKey] = comments[lowerKey] = trimNull(value);
-      offset += 4 + commentLength;
     }
 
     return comments;
-  } catch (e) {
-    //all exceptions are just malformed/truncated data, so we just ignore them
+  } catch {
+    // all exceptions are just malformed/truncated data, so we just ignore them
     return undefined;
   }
 };
@@ -53,14 +57,14 @@ export const parseComments = (packet: DataView): Record<string, string> | undefi
  * @returns Vorbis Comment object on success, undefined on failure
  */
 export const ogg = (buffer: Uint8Array | ArrayBufferLike): Record<string, string> | undefined => {
-  const view = createView(buffer);
+  const view = createReaderView(buffer);
 
-  const id = parsePage(view, 0);
+  const id = parsePage(view);
   if (!id) {
     return undefined;
   }
 
-  const commentHeader = parsePage(view, id.pageSize);
+  const commentHeader = parsePage(view);
   if (commentHeader) {
     return parseComments(commentHeader.packet);
   }
