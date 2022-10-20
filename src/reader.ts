@@ -41,13 +41,18 @@ export const restLength = (reader: ReaderView): number => {
 
 export const getUint = (reader: ReaderView, length: 1 | 2 | 4 | 8, littleEndian = false): number => {
   const { view, position } = moveRel(reader, length);
+
   return Number(
-    {
-      1: (position: number) => view.getUint8(position),
-      2: (position: number, littleEndian: boolean) => view.getUint16(position, littleEndian),
-      4: (position: number, littleEndian: boolean) => view.getUint32(position, littleEndian),
-      8: (position: number, littleEndian: boolean) => view.getBigUint64(position, littleEndian),
-    }[length](position, littleEndian)
+    view[
+      (
+        {
+          1: "getUint8",
+          2: "getUint16",
+          4: "getUint32",
+          8: "getBigUint64",
+        } as const
+      )[length]
+    ](position, littleEndian)
   );
 };
 
@@ -55,12 +60,16 @@ export const getInt = (reader: ReaderView, length: 1 | 2 | 4 | 8, littleEndian =
   const { view, position } = moveRel(reader, length);
 
   return Number(
-    {
-      1: (position: number) => view.getInt8(position),
-      2: (position: number, littleEndian: boolean) => view.getInt16(position, littleEndian),
-      4: (position: number, littleEndian: boolean) => view.getInt32(position, littleEndian),
-      8: (position: number, littleEndian: boolean) => view.getBigInt64(position, littleEndian),
-    }[length](position, littleEndian)
+    view[
+      (
+        {
+          1: "getInt8",
+          2: "getInt16",
+          4: "getInt32",
+          8: "getBigInt64",
+        } as const
+      )[length]
+    ](position, littleEndian)
   );
 };
 
