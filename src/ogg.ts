@@ -1,4 +1,4 @@
-import { createReaderView, getBytes, getString, getUint, moveRel, ReaderView, restLength } from "./reader";
+import { createReaderView, getBytes, getString, getUint, getView, moveRel, ReaderView, restLength } from "./reader";
 import { splitTwo, trimNull } from "./utils";
 
 interface Page {
@@ -21,7 +21,7 @@ const parsePage = (view: ReaderView): Page | undefined => {
   const pageSize = segmentTable.reduce((cur, next) => cur + next);
 
   // 7 = 1 + "vorbis".length,
-  return moveRel(view, 7), { pageSize: pageSize + 27 + segmentsSize, packet: createReaderView(getBytes(view, pageSize - 7)) };
+  return moveRel(view, 7), { pageSize: pageSize + 27 + segmentsSize, packet: getView(view, pageSize - 7) };
 };
 
 export const parseComments = (packet: ReaderView): Record<string, string> | undefined => {

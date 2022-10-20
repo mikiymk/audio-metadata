@@ -2,7 +2,7 @@
  * https://learn.microsoft.com/en-us/windows/win32/wmformat/overview-of-the-asf-format
  */
 
-import { createReaderView, EncUtf16le, getBytes, getString, getUint, moveRel, ReaderView } from "./reader";
+import { createReaderView, EncUtf16le, getBytes, getString, getUint, getView, moveRel, ReaderView } from "./reader";
 import { trimNull } from "./utils";
 
 const getHexString = (view: ReaderView): string => {
@@ -19,7 +19,7 @@ const parseAsfObject = (view: ReaderView): AsfObject | undefined => {
   try {
     const guid = getHexString(view);
     const size = getUint(view, 8, true);
-    const data = createReaderView(getBytes(view, size - 24));
+    const data = getView(view, size - 24);
 
     return { guid, size, data };
   } catch {

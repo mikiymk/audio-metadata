@@ -5,7 +5,7 @@
  * https://github.com/sannies/mp4parser/
  */
 
-import { createReaderView, EncAscii, EncUtf16be, EncUtf8, getBytes, getString, getUint, moveRel, peek, ReaderView, restLength } from "./reader";
+import { createReaderView, EncAscii, EncUtf16be, EncUtf8, getString, getUint, getView, moveRel, peek, ReaderView, restLength } from "./reader";
 
 // moov trak mdia udta
 // + meta
@@ -30,7 +30,7 @@ const parseAtom = (view: ReaderView): Atom | undefined => {
     return {
       size,
       type,
-      data: createReaderView(getBytes(view, size - headerSize)),
+      data: getView(view, size - headerSize),
     };
   } catch {
     return undefined;

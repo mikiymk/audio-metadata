@@ -81,21 +81,27 @@ export const getInt = (reader: ReaderView, length: 1 | 2 | 4 | 8, littleEndian =
   }
 };
 
+const getArrayBuffer = (reader: ReaderView, length: number): ArrayBufferLike => {
+  const { view, position } = moveRel(reader, length);
+
+  return view.buffer.slice(position, position + length);
+};
+
 export const EncAscii = "ascii";
 export const EncUtf8 = "utf-8";
 export const EncUtf16be = "utf-16be";
 export const EncUtf16le = "utf-16le";
 
 export const getString = (reader: ReaderView, length: number, encoding = EncUtf8): string => {
-  const { view, position } = moveRel(reader, length);
-
-  return new TextDecoder(encoding).decode(view.buffer.slice(position, position + length));
+  return new TextDecoder(encoding).decode(getArrayBuffer(reader, length));
 };
 
 export const getBytes = (reader: ReaderView, length: number): Uint8Array => {
-  const { view, position } = moveRel(reader, length);
+  return new Uint8Array(getArrayBuffer(reader, length));
+};
 
-  return new Uint8Array(view.buffer.slice(position, position + length));
+export const getView = (reader: ReaderView, length: number): ReaderView => {
+  return createReaderView(getArrayBuffer(reader, length));
 };
 
 export const peek =

@@ -4,7 +4,7 @@
  */
 
 import { parseComments } from "./ogg";
-import { createReaderView, EncAscii, getBytes, getString, getUint, moveRel } from "./reader";
+import { createReaderView, EncAscii, getString, getUint, getView, moveRel } from "./reader";
 
 /**
  * Read the flac METADATA_BLOCK_VORBIS_COMMENT from the buffer if it can be read.
@@ -27,7 +27,7 @@ export const flac = (buffer: Uint8Array | ArrayBufferLike): Record<string, strin
 
     if ((type & 0x7f) == 4) {
       // vorbis comment
-      comment = Object.assign(comment, parseComments(createReaderView(getBytes(view, length))));
+      comment = Object.assign(comment, parseComments(getView(view, length)));
     } else {
       moveRel(view, length);
     }
