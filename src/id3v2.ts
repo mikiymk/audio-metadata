@@ -1,4 +1,5 @@
 import { createReaderView, EncAscii, EncUtf16be, EncUtf16le, EncUtf8, getBytes, getString, getUint, moveRel, peek, ReaderView } from "./reader";
+import { CommonKeys, mapTag } from "./tagmap";
 import { trimNull, splitTwo } from "./utils";
 
 const getUint28 = (view: ReaderView): number => {
@@ -24,16 +25,32 @@ const getEncodingText = (view: ReaderView, size: number) => {
   );
 };
 
-const IdMap: Record<string, string> = {
-  TALB: "album",
-  TCOM: "composer",
+const IdMap: Record<string, CommonKeys> = {
+  TT1: "title",
+  TT2: "title",
   TIT1: "title",
   TIT2: "title",
+  TAL: "album",
+  TALB: "album",
+  TP1: "artist",
   TPE1: "artist",
+  TP2: "albumartist",
+  TPE2: "albumartist",
+  TCM: "composer",
+  TCOM: "composer",
+  TRK: "track",
   TRCK: "track",
-  TSSE: "encoder",
+  TPS: "disc",
+  TPOS: "disc",
+  TYE: "year",
+  TYER: "year",
   TDRC: "year",
+  TSS: "encoder",
+  TSSE: "encoder",
+  TCO: "genre",
   TCON: "genre",
+  COM: "comment",
+  COMM: "comment",
 };
 
 type ID3v2Frame = {
@@ -91,12 +108,11 @@ export const id3v2 = (buffer: Uint8Array | ArrayBufferLike): Record<string, stri
       continue;
     }
 
-    const id = IdMap[frame.id] || frame.id;
-    if (id === "TXXX") {
+    if (frame.id === "TXXX") {
       const [key, value] = splitTwo(frame.content, "\0");
       frames[key] = value;
     } else {
-      frames[id] = frames[frame.id] = frame.content;
+      mapTag(frames, IdMap, frame.id, frame.content);
     }
   }
 

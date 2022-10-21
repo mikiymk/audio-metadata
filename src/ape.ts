@@ -4,12 +4,17 @@
 
 import { checkMagicId3v1, checkMagicId3v12, checkMagicId3v1Enhanced } from "./id3v1";
 import { createReaderView, EncAscii, EncUtf8, getString, getUint, moveRel, peek, ReaderView } from "./reader";
+import { CommonKeys, mapTag } from "./tagmap";
 
 const checkMagicApev2 = (view: ReaderView): boolean => {
   return peek(getString, -32)(view, 8, EncAscii) === "APETAGEX";
 };
 
 type APEv2 = Record<string, string>;
+
+const TagMap: Record<string, CommonKeys> = {
+  "Album Artist": "albumartist",
+};
 
 /**
  * Read the APEv2 tag from the buffer if it can be read.
@@ -54,7 +59,7 @@ export const apev2 = (buffer: Uint8Array | ArrayBufferLike): APEv2 | undefined =
       }
       const value = getString(view, valueSize, EncUtf8);
 
-      items[key.toLowerCase()] = value;
+      mapTag(items, TagMap, key.toLowerCase(), value);
     }
 
     return items;

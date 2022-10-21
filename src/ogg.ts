@@ -1,4 +1,5 @@
 import { createReaderView, getBytes, getString, getUint, getView, moveRel, ReaderView, restLength } from "./reader";
+import { CommonKeys, mapTag } from "./tagmap";
 import { splitTwo, trimNull } from "./utils";
 
 interface Page {
@@ -29,15 +30,14 @@ export const parseComments = (packet: ReaderView): Record<string, string> | unde
     const vendorLength = getUint(packet, 4, true),
       commentListLength = (moveRel(packet, vendorLength), getUint(packet, 4, true)),
       comments: Record<string, string> = {},
-      map: Record<string, string> = { tracknumber: "track" };
+      map: Record<string, CommonKeys> = { tracknumber: "track" };
 
     for (let i = 0; i < commentListLength; i++) {
       const commentLength = getUint(packet, 4, true),
         comment = getString(packet, commentLength),
-        [key, value] = splitTwo(comment, "="),
-        lowerKey = key.toLowerCase();
+        [key, value] = splitTwo(comment, "=");
 
-      comments[map[lowerKey] || lowerKey] = comments[lowerKey] = trimNull(value);
+      mapTag(comments, map, key.toLowerCase(), trimNull(value));
     }
 
     return comments;

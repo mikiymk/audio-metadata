@@ -6,6 +6,7 @@
  */
 
 import { createReaderView, EncAscii, EncUtf16be, EncUtf8, getString, getUint, getView, moveRel, peek, ReaderView, restLength } from "./reader";
+import { CommonKeys, mapTag } from "./tagmap";
 
 // moov trak mdia udta
 // + meta
@@ -23,7 +24,7 @@ const parseAtom = (view: ReaderView): Atom | undefined => {
     // if size == 1, atom has extended size
     // if size == 0, atom is last atom of container and size is reach to end
     const rawSize = getUint(view, 4);
-    const type = getString(view, 4, EncAscii).toLowerCase();
+    const type = getString(view, 4, EncAscii);
     const size = rawSize === 1 ? getUint(view, 8) : rawSize || restLength(view);
     const headerSize = rawSize === 1 ? 16 : 8;
 
@@ -48,18 +49,20 @@ const parseAtomList = function* (view: ReaderView): Generator<Atom> {
   }
 };
 
-const TypeMap: Record<string, string> = {
-  "©alb": "album",
-  "©wrt": "composer",
+const TypeMap: Record<string, CommonKeys> = {
   "©nam": "title",
-  "©art": "artist",
-  aart: "albumartist",
-  "©cmt": "comment",
+  "©alb": "album",
+  "©ART": "artist",
+  aART: "albumartist",
+  "©wrt": "composer",
+  "©com": "composer",
   trkn: "track",
-  "©too": "encoder",
+  disk: "disc",
   "©day": "year",
+  "©too": "encoder",
   "©gen": "genre",
   gnre: "genre",
+  "©cmt": "comment",
 };
 
 const parseItem = (view: ReaderView): string | undefined => {
@@ -82,12 +85,12 @@ const parseItem = (view: ReaderView): string | undefined => {
 };
 
 const parseItemList = (view: ReaderView): Record<string, string> => {
-  let metadatas: Record<string, string> = {};
+  const metadatas: Record<string, string> = {};
 
   for (const { data, type } of parseAtomList(view)) {
     const item = parseItem(data);
     if (item) {
-      metadatas = { ...metadatas, [type]: item, [TypeMap[type] || type]: item };
+      mapTag(metadatas, TypeMap, type, item);
     }
   }
 

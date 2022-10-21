@@ -3,6 +3,7 @@
  */
 
 import { createReaderView, EncUtf16le, getBytes, getString, getUint, getView, moveRel, ReaderView } from "./reader";
+import { CommonKeys, mapTag } from "./tagmap";
 import { trimNull } from "./utils";
 
 const getHexString = (view: ReaderView): string => {
@@ -43,8 +44,25 @@ const parseContentDescription = (view: ReaderView) => {
   };
 };
 
-const DescriptionMap: Record<string, string> = {
-  "wm/albumtitle": "album",
+const DescriptionMap: Record<string, CommonKeys> = {
+  albumtitle: "album",
+  tracknumber: "track",
+  partofset: "disc",
+  toolname: "encoder",
+  comments: "comment",
+};
+
+const setDescription = (descriptions: Record<string, string>, type: number, name: string, description: string) => {
+  name = trimNull(name).toLowerCase();
+  name = name.startsWith("wm/") ? name.slice(3) : name;
+
+  switch (type) {
+    case 0:
+      mapTag(descriptions, DescriptionMap, name, trimNull(description));
+      break;
+
+    default:
+  }
 };
 
 const parseExtendedContentDescription = (view: ReaderView) => {
@@ -53,20 +71,12 @@ const parseExtendedContentDescription = (view: ReaderView) => {
 
   for (let i = 0; i < count; i++) {
     const nameLen = getUint(view, 2, true);
-    const name = trimNull(getString(view, nameLen, EncUtf16le)).toLowerCase();
-    const name2 = name.startsWith("wm/") ? name.slice(3) : name;
-    const name3 = DescriptionMap[name] || name;
+    const name = getString(view, nameLen, EncUtf16le);
     const valueType = getUint(view, 2, true);
     const valueLen = getUint(view, 2, true);
+    const description = getString(view, valueLen, EncUtf16le);
 
-    switch (valueType) {
-      case 0:
-        descriptions[name2] = descriptions[name3] = trimNull(getString(view, valueLen, EncUtf16le));
-        break;
-
-      default:
-        moveRel(view, valueLen);
-    }
+    setDescription(descriptions, valueType, name, description);
   }
 
   return descriptions;
@@ -99,19 +109,10 @@ const parseMetadata = (view: ReaderView) => {
     const nameLen = getUint(view, 2, true);
     const valueType = getUint(view, 2, true);
     const valueLen = getUint(view, 2, true);
+    const name = getString(view, nameLen, EncUtf16le);
+    const description = getString(view, valueLen, EncUtf16le);
 
-    const name = trimNull(getString(view, nameLen, EncUtf16le)).toLowerCase();
-    const name2 = name.startsWith("wm/") ? name.slice(3) : name;
-    const name3 = DescriptionMap[name] || name;
-
-    switch (valueType) {
-      case 0:
-        descriptions[name2] = descriptions[name3] = trimNull(getString(view, valueLen, EncUtf16le));
-        break;
-
-      default:
-        moveRel(view, valueLen);
-    }
+    setDescription(descriptions, valueType, name, description);
   }
 
   return descriptions;
