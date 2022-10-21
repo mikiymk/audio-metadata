@@ -1,15 +1,15 @@
 import { createReaderView, EncAscii, getString, getUint, moveRel, peek, ReaderView } from "./reader";
 import { trimNull } from "./utils";
 
-const checkMagicId3v1 = (view: ReaderView): boolean => {
+export const checkMagicId3v1 = (view: ReaderView): boolean => {
   return peek(getString, -128)(view, 3, EncAscii) === "TAG";
 };
 
-const checkMagicId3v12 = (view: ReaderView): boolean => {
+export const checkMagicId3v12 = (view: ReaderView): boolean => {
   return peek(getString, -128)(view, 3, EncAscii) === "EXT";
 };
 
-const checkMagicId3v1Enhanced = (view: ReaderView): boolean => {
+export const checkMagicId3v1Enhanced = (view: ReaderView): boolean => {
   return peek(getString, -128)(view, 4, EncAscii) === "TAG+";
 };
 

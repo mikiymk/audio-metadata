@@ -1,4 +1,4 @@
-import { ogg, id3v2, id3v1, flac, wma, mp4 } from "../src";
+import { ogg, id3v2, id3v1, flac, wma, mp4, apev2 } from "../src";
 import { join } from "path";
 import { readFile } from "fs/promises";
 import { describe, expect, it } from "vitest";
@@ -227,6 +227,26 @@ describe("mp4", () => {
   it("should not explode if mp4 descriptions don't exist", async () => {
     const buffer = Buffer.alloc(30);
     const metadata = mp4(buffer);
+    expect(metadata).toBeUndefined();
+  });
+});
+
+describe("apev2", () => {
+  it("should read tags from apev2", async () => {
+    const file = filePath("apev2.mp3");
+    const buffer = await readFile(file);
+
+    const metadata = apev2(buffer);
+
+    expect(metadata).toBeTruthy();
+    expect(metadata).toHaveProperty("title", "sample s3");
+    expect(metadata).toHaveProperty("artist", "unknown");
+    expect(metadata).toHaveProperty("album", "album");
+  });
+
+  it("should not explode if apev2 tags don't exist", async () => {
+    const buffer = Buffer.alloc(30);
+    const metadata = apev2(buffer);
     expect(metadata).toBeUndefined();
   });
 });
