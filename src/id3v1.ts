@@ -1,13 +1,19 @@
-import { createReaderView, EncAscii, getString, getUint, moveAbs, peek, ReaderView } from "./reader";
+import { createReaderView, EncAscii, getString, getUint, moveRel, peek, ReaderView } from "./reader";
 import { trimNull } from "./utils";
 
 const checkMagicId3v1 = (view: ReaderView): boolean => {
-  moveAbs(view, -128);
-  //"TAG"
-  return getString(view, 3, EncAscii) === "TAG";
+  return peek(getString, -128)(view, 3, EncAscii) === "TAG";
 };
 
-export type ID3v1 = {
+const checkMagicId3v12 = (view: ReaderView): boolean => {
+  return peek(getString, -128)(view, 3, EncAscii) === "EXT";
+};
+
+const checkMagicId3v1Enhanced = (view: ReaderView): boolean => {
+  return peek(getString, -128)(view, 4, EncAscii) === "TAG+";
+};
+
+export interface ID3v1 {
   title: string;
   artist: string;
   album: string;
@@ -15,7 +21,21 @@ export type ID3v1 = {
   comment: string;
   track: number | undefined;
   genre: number;
-};
+}
+
+interface ID3v1Extended {
+  ttl?: string;
+  ast?: string;
+  alb?: string;
+  com?: string;
+}
+
+interface ID3v1Enhanced {
+  subgenre?: string;
+  speed?: number;
+  startTime?: string;
+  endTime?: string;
+}
 
 /**
  * Read the ID3v1 tag from the last 128 bytes of the buffer if it can be read.
@@ -30,18 +50,50 @@ export const id3v1 = (buffer: Uint8Array | ArrayBufferLike): ID3v1 | undefined =
     if (!checkMagicId3v1(view)) {
       return undefined;
     }
+    moveRel(view, -128);
+
+    let extendedData: ID3v1Extended = {};
+    let enhancedData: ID3v1Enhanced = {};
+    if (checkMagicId3v12(view)) {
+      moveRel(view, -125);
+      extendedData = {
+        ttl: getString(view, 30, EncAscii),
+        ast: getString(view, 30, EncAscii),
+        alb: getString(view, 30, EncAscii),
+        com: getString(view, 15, EncAscii),
+      };
+      enhancedData = {
+        subgenre: trimNull(getString(view, 20, EncAscii)),
+      };
+    }
+    if (checkMagicId3v1Enhanced(view)) {
+      moveRel(view, -223);
+      extendedData = {
+        ttl: getString(view, 60, EncAscii),
+        ast: getString(view, 60, EncAscii),
+        alb: getString(view, 60, EncAscii),
+      };
+      enhancedData = {
+        speed: getUint(view, 1),
+        subgenre: trimNull(getString(view, 30, EncAscii)),
+        startTime: trimNull(getString(view, 6, EncAscii)),
+        endTime: trimNull(getString(view, 6, EncAscii)),
+      };
+    }
+    moveRel(view, 3);
 
     //next byte is the track
     const hasTrack = peek(getUint, 122)(view, 1) === 0;
 
     return {
-      title: trimNull(getString(view, 30, EncAscii)),
-      artist: trimNull(getString(view, 30, EncAscii)),
-      album: trimNull(getString(view, 30, EncAscii)),
+      title: trimNull(getString(view, 30, EncAscii) + (extendedData.ttl ?? "")),
+      artist: trimNull(getString(view, 30, EncAscii) + (extendedData.ast ?? "")),
+      album: trimNull(getString(view, 30, EncAscii) + (extendedData.alb ?? "")),
       year: trimNull(getString(view, 4, EncAscii)),
-      comment: trimNull(getString(view, hasTrack ? 28 : 30, EncAscii)),
+      comment: trimNull(getString(view, hasTrack ? 28 : 30, EncAscii) + (extendedData.com ?? "")),
       track: hasTrack ? getUint(view, 2) : undefined,
       genre: getUint(view, 1),
+      ...enhancedData,
     };
   } catch {
     return undefined;

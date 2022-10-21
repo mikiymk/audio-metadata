@@ -13,16 +13,23 @@ export const createReaderView = (buffer: ArrayBufferView | ArrayBufferLike): Rea
   return [view, 0];
 };
 
+const normalize: (reader: ReaderView) => void = (reader) => {
+  const [view, position] = reader;
+  reader[1] = position < 0 ? view.byteLength + position : position;
+};
+
 export const moveRel: (reader: ReaderView, length: number) => ReaderView = (reader, length) => {
   const [view, position] = reader;
   reader[1] += length;
+  normalize(reader);
 
   return [view, position];
 };
 
 export const moveAbs: (reader: ReaderView, newPosition: number) => ReaderView = (reader, newPosition) => {
   const [view, position] = reader;
-  reader[1] = newPosition < 0 ? view.byteLength + newPosition : newPosition;
+  reader[1] = newPosition;
+  normalize(reader);
 
   return [view, position];
 };
