@@ -81,7 +81,7 @@ export const id3v2 = (buffer: Uint8Array | ArrayBufferLike): Record<string, stri
     extendedHeaderLength = extendedHeader ? getUint28(view) : 0;
   moveRel(view, extendedHeaderLength);
 
-  for (; view.position < 10 + extendedHeaderLength + size; ) {
+  for (; view[1] < 10 + extendedHeaderLength + size; ) {
     const frame = readFrame(view);
     if (!frame) {
       break;
