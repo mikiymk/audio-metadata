@@ -1,4 +1,4 @@
-import { ogg, id3v2, id3v1, flac, wma, mp4, apev2, aiff } from "../src";
+import { ogg, id3v2, id3v1, flac, wma, mp4, apev2, aiff, wav } from "../src";
 import { join } from "path";
 import { readFile } from "fs/promises";
 import { describe, expect, it } from "vitest";
@@ -280,6 +280,26 @@ describe("aiff", () => {
   it("should not explode if aiff tags don't exist", async () => {
     const buffer = Buffer.alloc(30);
     const metadata = aiff(buffer);
+    expect(metadata).toBeUndefined();
+  });
+});
+
+describe("wav", () => {
+  it("should read tags from wav", async () => {
+    const file = filePath("riff.wav");
+    const buffer = await readFile(file);
+
+    const metadata = wav(buffer);
+
+    expect(metadata).toBeTruthy();
+    expect(metadata).toHaveProperty("title", "wav riff");
+    expect(metadata).toHaveProperty("artist", "unknown");
+    expect(metadata).toHaveProperty("album", "wav");
+  });
+
+  it("should not explode if wav tags don't exist", async () => {
+    const buffer = Buffer.alloc(30);
+    const metadata = wav(buffer);
     expect(metadata).toBeUndefined();
   });
 });
