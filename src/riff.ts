@@ -9,6 +9,18 @@ interface IffChunk {
   data: ReaderView;
 }
 
+/**
+ * read RIFF chunk
+ *
+ * | size    | tag         |
+ * | ------- | ----------- |
+ * | 4 bytes | chunk ID    |
+ * | 4 bytes | chunk size  |
+ * | n bytes | chunk data  |
+ *
+ * @param view ReaderView contains RIFF chunk
+ * @returns RIFF chunk object on success, undefined on failure
+ */
 const parseChunk = (view: ReaderView): IffChunk | undefined => {
   try {
     const id = getString(view, 4, EncAscii);
@@ -35,17 +47,26 @@ const InfoMap: Record<string, CommonKeys> = {
   ICMT: "comment",
 };
 
+/**
+ * read RIFF LIST chunk data, all children is metadata
+ * @param view ReaderView contains RIFF chunk
+ * @returns RIFF chunk object on success, undefined on failure
+ */
 const parseListInfo = (view: ReaderView): Record<string, string> | undefined => {
   const infos: Record<string, string> = {};
   let chunk;
   while ((chunk = parseChunk(view))) {
-    const text = getString(chunk.data, chunk.size, EncUtf8);
-    mapTag(infos, InfoMap, chunk.id, trimNull(text));
+    mapTag(infos, InfoMap, chunk.id, trimNull(getString(chunk.data, chunk.size, EncUtf8)));
   }
 
   return infos;
 };
 
+/**
+ * read RIFF LIST chunk data
+ * @param view ReaderView contains RIFF chunk
+ * @returns RIFF chunk object on success, undefined on failure
+ */
 const parseRiff = (view: ReaderView): Record<string, string> | undefined => {
   let chunk;
   let infos: Record<string, string> = {};

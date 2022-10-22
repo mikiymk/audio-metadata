@@ -19,6 +19,19 @@ interface Atom {
   data: ReaderView;
 }
 
+/**
+ * read MP4 box
+ *
+ * | size    | tag                                  |
+ * | ------- | ------------------------------------ |
+ * | 4 bytes | box size                             |
+ * | 4 bytes | box type                             |
+ * | 8 bytes | extended box size (if box size == 1) |
+ * | n bytes | box data                             |
+ *
+ * @param view ReaderView contains MP4 box
+ * @returns MP4 box object on success, undefined on failure
+ */
 const parseAtom = (view: ReaderView): Atom | undefined => {
   try {
     // if size == 1, atom has extended size
@@ -38,6 +51,10 @@ const parseAtom = (view: ReaderView): Atom | undefined => {
   }
 };
 
+/**
+ * read multiple MP4 boxes
+ * @param view ReaderView contains MP4 boxes
+ */
 const parseAtomList = function* (view: ReaderView): Generator<Atom> {
   let atom;
   let safetyCount = 0;
@@ -49,6 +66,11 @@ const parseAtomList = function* (view: ReaderView): Generator<Atom> {
   }
 };
 
+/**
+ * MP4 tag map to common tag
+ *
+ * ref: https://wiki.hydrogenaud.io/index.php?title=Tag_Mapping
+ */
 const TypeMap: Record<string, CommonKeys> = {
   "©nam": "title",
   "©alb": "album",
@@ -65,6 +87,11 @@ const TypeMap: Record<string, CommonKeys> = {
   "©cmt": "comment",
 };
 
+/**
+ * read text information from MP4 data box in MP4 box list
+ * @param view ReaderView contains MP4 data box
+ * @returns data string in MP4 data box or undefined
+ */
 const parseItem = (view: ReaderView): string | undefined => {
   const data = [...parseAtomList(view)].find((value) => value.type === "data");
 
@@ -84,6 +111,11 @@ const parseItem = (view: ReaderView): string | undefined => {
   }
 };
 
+/**
+ * read MP4 tag object from MP4 ilst box
+ * @param view ReaderView, MP4 ilst box data
+ * @returns MP4 tag object in MP4 box
+ */
 const parseItemList = (view: ReaderView): Record<string, string> => {
   const metadatas: Record<string, string> = {};
 
@@ -97,6 +129,11 @@ const parseItemList = (view: ReaderView): Record<string, string> => {
   return metadatas;
 };
 
+/**
+ * read MP4 tag object from MP4 box
+ * @param view ReaderView contains MP4 boxes
+ * @returns MP4 tag object in MP4 box
+ */
 const parseAtoms = (view: ReaderView): Record<string, string> => {
   let metadatas: Record<string, string> = {};
 
@@ -116,6 +153,12 @@ const atomsDetailParsers: Record<string, (view: ReaderView) => Record<string, st
   ilst: parseItemList,
 };
 
+/**
+ * if MP4 meta box follows QuickTime specification, meta box contains only box list,
+ * if follows MP4 specification, meta box contains version and flags before box list.
+ * @param view ReaderView contains MP4 meta box data
+ * @returns same as argument ReaderView
+ */
 const metaBoxShift = (view: ReaderView): ReaderView => {
   const type = peek(getString, 4)(view, 4, EncAscii);
   const handler = peek(getString, 16)(view, 4, EncAscii);

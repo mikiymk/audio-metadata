@@ -1,30 +1,58 @@
+/**
+ * http://id3.org/id3v2.3.0
+ * http://id3.org/id3v2.4.0-structure
+ * http://id3.org/id3v2.4.0-frames
+ */
+
 import { createReaderView, EncAscii, EncUtf16be, EncUtf16le, EncUtf8, getBytes, getString, getUint, moveRel, peek, ReaderView } from "./reader";
 import { CommonKeys, mapTag } from "./tagmap";
 import { trimNull, splitTwo } from "./utils";
 
+/**
+ * read 4-byte SyncSafe Integer from ReaderView
+ * @param view ReaderView contains SyncSafe Integer
+ * @returns read number
+ */
 const getUint28 = (view: ReaderView): number => {
   return getBytes(view, 4).reduce((prev, curr) => (prev << 7) | (curr & 0x7f), 0);
 };
 
+/**
+ * read ID3v2 text frame data
+ *
+ * | size    | tag            |
+ * | ------- | -------------- |
+ * | 1 byte  | encode         |
+ * | n bytes | encoded string |
+ *
+ * encode is
+ *
+ * - 0x00 = ISO-8859-1
+ * - 0x01 = UTF-16 with Byte Order Mark
+ * - 0x02 = UTF-16 Big Endian
+ * - 0x03 = UTF-8
+ *
+ * @param view ReaderView contains encoding byte and encoded string
+ * @param size reading size
+ * @returns decoded string
+ */
 const getEncodingText = (view: ReaderView, size: number) => {
   return getString(
     view,
     size - 1,
     {
-      // ISO-8859-1
       0: EncAscii,
-
-      // UTF-16 BOM
-      1: peek(getUint)(view, 2) === 0xfeff ? EncUtf16be : EncUtf16le,
-
-      // UTF-16BE w/o BOM
+      1: peek(getUint, 1)(view, 2) === 0xfeff ? EncUtf16be : EncUtf16le,
       2: EncUtf16be,
-    }[getUint(view, 1)] ??
-      // UTF-8 - null terminated
-      EncUtf8
+    }[getUint(view, 1)] ?? EncUtf8
   );
 };
 
+/**
+ * ID3v2 tag map to common tag
+ *
+ * ref: https://wiki.hydrogenaud.io/index.php?title=Tag_Mapping
+ */
 const IdMap: Record<string, CommonKeys> = {
   TT1: "title",
   TT2: "title",
@@ -58,6 +86,19 @@ type ID3v2Frame = {
   content?: string;
 };
 
+/**
+ * read ID3v2 frame
+ *
+ * | size    | tag         |
+ * | ------- | ----------- |
+ * | 4 bytes | frame ID    |
+ * | 4 bytes | frame size  |
+ * | 2 bytes | frame flags |
+ * | n bytes | frame data  |
+ *
+ * @param view ReaderView contains ID3v2 frame
+ * @returns ID3v2 frame object on success, undefined on failure
+ */
 const readFrame = (view: ReaderView): ID3v2Frame | undefined => {
   try {
     const id = getString(view, 4, EncAscii);
@@ -75,9 +116,6 @@ const readFrame = (view: ReaderView): ID3v2Frame | undefined => {
   }
 };
 
-//http://id3.org/id3v2.3.0
-//http://id3.org/id3v2.4.0-structure
-//http://id3.org/id3v2.4.0-frames
 /**
  * Read the ID3v2 tag from the buffer if it can be read.
  * @param buffer Buffer object for music files containing ID3v2 tags

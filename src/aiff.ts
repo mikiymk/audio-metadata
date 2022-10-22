@@ -7,6 +7,18 @@ interface IffChunk {
   data: ReaderView;
 }
 
+/**
+ * read AIFF chunk
+ *
+ * | size    | tag         |
+ * | ------- | ----------- |
+ * | 4 bytes | chunk ID    |
+ * | 4 bytes | chunk size  |
+ * | n bytes | chunk data  |
+ *
+ * @param view ReaderView contains AIFF chunk
+ * @returns AIFF chunk object on success, undefined on failure
+ */
 const parseChunk = (view: ReaderView): IffChunk | undefined => {
   try {
     const id = getString(view, 4, EncAscii);

@@ -6,6 +6,11 @@ import { createReaderView, EncUtf16le, getBytes, getString, getUint, getView, mo
 import { CommonKeys, mapTag } from "./tagmap";
 import { trimNull } from "./utils";
 
+/**
+ * read GUID as Hex string
+ * @param view ReaderView contains GUID
+ * @returns GUID bytes string
+ */
 const getHexString = (view: ReaderView): string => {
   return "G" + getBytes(view, 16).reduce((prev, curr) => prev + curr.toString(16).padStart(2, "0").toUpperCase(), "");
 };
@@ -16,6 +21,18 @@ interface AsfObject {
   data: ReaderView;
 }
 
+/**
+ * read ASF object
+ *
+ * | size     | tag         |
+ * | -------- | ----------- |
+ * | 16 bytes | object GUID |
+ * |  8 bytes | object size |
+ * |  n bytes | object data |
+ *
+ * @param view ReaderView contains ASF object
+ * @returns ASF object object on success, undefined on failure
+ */
 const parseAsfObject = (view: ReaderView): AsfObject | undefined => {
   try {
     const guid = getHexString(view);
@@ -28,6 +45,25 @@ const parseAsfObject = (view: ReaderView): AsfObject | undefined => {
   }
 };
 
+/**
+ * read ASF Content Description object
+ *
+ * | size    | tag                |
+ * | ------- | ------------------ |
+ * | 2 bytes | title length       |
+ * | 2 bytes | author length      |
+ * | 2 bytes | copyright length   |
+ * | 2 bytes | description length |
+ * | 2 bytes | rating length      |
+ * | n bytes | title              |
+ * | n bytes | author             |
+ * | n bytes | copyright          |
+ * | n bytes | description        |
+ * | n bytes | rating             |
+ *
+ * @param view ReaderView contains ASF Content Description object
+ * @returns ASF tags on success, undefined on failure
+ */
 const parseContentDescription = (view: ReaderView) => {
   const titleLen = getUint(view, 2, true);
   const authorLen = getUint(view, 2, true);
@@ -52,6 +88,13 @@ const DescriptionMap: Record<string, CommonKeys> = {
   comments: "comment",
 };
 
+/**
+ * set formed tag to tags object if type is UTF-8 string
+ * @param descriptions ASF tags object
+ * @param type value type, 0x00 = UTF-8
+ * @param name set tag name
+ * @param description set tag value
+ */
 const setDescription = (descriptions: Record<string, string>, type: number, name: string, description: string) => {
   name = trimNull(name).toLowerCase();
   name = name.startsWith("wm/") ? name.slice(3) : name;
@@ -65,6 +108,23 @@ const setDescription = (descriptions: Record<string, string>, type: number, name
   }
 };
 
+/**
+ * read ASF Extended Content Description object
+ *
+ * | size     | tag                |
+ * | -------- | ------------------ |
+ * | 2 bytes  | descriptions count |
+ * | * repeat |                    |
+ * | 2 bytes  | name length        |
+ * | n bytes  | name               |
+ * | 2 bytes  | value type         |
+ * | 2 bytes  | value length       |
+ * | n bytes  | value              |
+ * | *        |                    |
+ *
+ * @param view ReaderView contains ASF Extended Content Description object
+ * @returns ASF tags on success, undefined on failure
+ */
 const parseExtendedContentDescription = (view: ReaderView) => {
   const descriptions: Record<string, string> = {};
   const count = getUint(view, 2, true);
@@ -82,6 +142,11 @@ const parseExtendedContentDescription = (view: ReaderView) => {
   return descriptions;
 };
 
+/**
+ * read ASF Header Extension object
+ * @param view ReaderView contains ASF Header Extension object
+ * @returns ASF tags on success, undefined on failure
+ */
 const parseHeaderExtension = (view: ReaderView) => {
   moveRel(view, 22);
   let descriptions: Record<string, string> = {};
@@ -100,6 +165,25 @@ const parseHeaderExtension = (view: ReaderView) => {
   return descriptions;
 };
 
+/**
+ * read ASF Metadata object and ASF Metadata Library object
+ *
+ * | size     | tag                |
+ * | -------- | ------------------ |
+ * | 2 bytes  | descriptions count |
+ * | * repeat |                    |
+ * | 2 bytes  | reserved           |
+ * | 2 bytes  | stream number      |
+ * | 2 bytes  | name length        |
+ * | 2 bytes  | value type         |
+ * | 2 bytes  | value length       |
+ * | n bytes  | name               |
+ * | n bytes  | value              |
+ * | *        |                    |
+ *
+ * @param view ReaderView contains ASF Metadata object
+ * @returns ASF tags on success, undefined on failure
+ */
 const parseMetadata = (view: ReaderView) => {
   const descriptions: Record<string, string> = {};
   const count = getUint(view, 2, true);

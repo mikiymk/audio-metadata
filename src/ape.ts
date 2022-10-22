@@ -6,6 +6,11 @@ import { checkMagicId3v1, checkMagicId3v12, checkMagicId3v1Enhanced } from "./id
 import { createReaderView, EncAscii, EncUtf8, getString, getUint, moveRel, peek, ReaderView } from "./reader";
 import { CommonKeys, mapTag } from "./tagmap";
 
+/**
+ * Check if ReaderView contains Ape tag v2
+ * @param view ReaderView, position is after Ape tag v2
+ * @returns true if it contains Ape tag v2, false if it does not
+ */
 const checkMagicApev2 = (view: ReaderView): boolean => {
   return peek(getString, -32)(view, 8, EncAscii) === "APETAGEX";
 };
@@ -13,7 +18,7 @@ const checkMagicApev2 = (view: ReaderView): boolean => {
 type APEv2 = Record<string, string>;
 
 const TagMap: Record<string, CommonKeys> = {
-  "Album Artist": "albumartist",
+  "album artist": "albumartist",
 };
 
 /**
@@ -22,9 +27,9 @@ const TagMap: Record<string, CommonKeys> = {
  * @returns APEv2 object on success, undefined on failure
  */
 export const apev2 = (buffer: Uint8Array | ArrayBufferLike): APEv2 | undefined => {
-  //read last 128 bytes
   const view = createReaderView(buffer);
   try {
+    // Ape tag located before ID3v1
     if (checkMagicId3v1(view)) {
       moveRel(view, -128);
     }
