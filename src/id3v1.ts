@@ -42,7 +42,7 @@ interface ID3v1Enhanced {
  * @param buffer Buffer object for music files containing ID3v1 tags
  * @returns ID3v1 object on success, undefined on failure
  */
-export const id3v1 = (buffer: Uint8Array | ArrayBufferLike): ID3v1 & ID3v1Enhanced | undefined => {
+export const id3v1 = (buffer: Uint8Array | ArrayBufferLike): (ID3v1 & ID3v1Enhanced) | undefined => {
   //read last 128 bytes
   const view = createReaderView(buffer);
   try {
