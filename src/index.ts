@@ -5,3 +5,4 @@ export { flac } from "./flac";
 export { wma } from "./wma";
 export { mp4 } from "./mp4";
 export { apev2 } from "./ape";
+export { aiff } from "./aiff";

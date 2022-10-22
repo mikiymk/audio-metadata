@@ -83,7 +83,7 @@ const readFrame = (view: ReaderView): ID3v2Frame | undefined => {
  * @param buffer Buffer object for music files containing ID3v2 tags
  * @returns ID3v2 object on success, undefined on failure
  */
-export const id3v2 = (buffer: Uint8Array | ArrayBufferLike): Record<string, string> | undefined => {
+export const id3v2 = (buffer: ArrayBufferView | ArrayBufferLike): Record<string, string> | undefined => {
   const view = createReaderView(buffer);
   if (getString(view, 3, EncAscii) !== "ID3") {
     return undefined;

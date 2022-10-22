@@ -1,4 +1,4 @@
-import { ogg, id3v2, id3v1, flac, wma, mp4, apev2 } from "../src";
+import { ogg, id3v2, id3v1, flac, wma, mp4, apev2, aiff } from "../src";
 import { join } from "path";
 import { readFile } from "fs/promises";
 import { describe, expect, it } from "vitest";
@@ -247,6 +247,39 @@ describe("apev2", () => {
   it("should not explode if apev2 tags don't exist", async () => {
     const buffer = Buffer.alloc(30);
     const metadata = apev2(buffer);
+    expect(metadata).toBeUndefined();
+  });
+});
+
+describe("aiff", () => {
+  it("should read tags from aiff", async () => {
+    const file = filePath("aiff.aiff");
+    const buffer = await readFile(file);
+
+    const metadata = aiff(buffer);
+
+    expect(metadata).toBeTruthy();
+    expect(metadata).toHaveProperty("title", "aiff stereo");
+    expect(metadata).toHaveProperty("artist", "unknown");
+    expect(metadata).toHaveProperty("album", "aiff");
+  });
+
+  it("should read tags from aiff-c", async () => {
+    const file = filePath("aifc.aiff");
+    const buffer = await readFile(file);
+
+    const metadata = aiff(buffer);
+
+    expect(metadata).toBeTruthy();
+
+    expect(metadata).toHaveProperty("title", "aiff-c stereo");
+    expect(metadata).toHaveProperty("artist", "unknown");
+    expect(metadata).toHaveProperty("album", "aiff-c");
+  });
+
+  it("should not explode if aiff tags don't exist", async () => {
+    const buffer = Buffer.alloc(30);
+    const metadata = aiff(buffer);
     expect(metadata).toBeUndefined();
   });
 });
