@@ -13,7 +13,7 @@ const T = (t) => {
 }, u = (t, e) => {
   const [n, r] = t;
   return t[1] += e, X(t), [n, r];
-}, x = ([t, e]) => t.byteLength - e, s = (t, e, n = !1) => {
+}, S = ([t, e]) => t.byteLength - e, s = (t, e, n = !1) => {
   const [r, c] = u(t, e);
   return Number(
     r[{
@@ -23,10 +23,10 @@ const T = (t) => {
       8: "getBigUint64"
     }[e]](c, n)
   );
-}, S = (t, e) => {
+}, x = (t, e) => {
   const [n, r] = u(t, e);
   return n.buffer.slice(r, r + e);
-}, a = "ascii", y = "utf-8", k = "utf-16be", p = "utf-16le", o = (t, e, n = y) => new TextDecoder(n).decode(S(t, e)), D = (t, e) => new Uint8Array(S(t, e)), C = (t, e) => T(S(t, e)), g = (t, e = 0) => (...n) => {
+}, a = "ascii", y = "utf-8", k = "utf-16be", p = "utf-16le", o = (t, e, n = y) => new TextDecoder(n).decode(x(t, e)), D = (t, e) => new Uint8Array(x(t, e)), C = (t, e) => T(x(t, e)), g = (t, e = 0) => (...n) => {
   const [[r, c], ...i] = n;
   return t([r, c + e], ...i);
 }, b = (t, e, n, r) => {
@@ -35,7 +35,7 @@ const T = (t) => {
   const n = t.indexOf(e);
   return [t.substring(0, n), t.substring(n + 1)];
 }, R = (t) => {
-  if (x(t) < 27)
+  if (S(t) < 27)
     return;
   const e = (u(t, 26), s(t, 1)), n = D(t, e);
   if (!n.length)
@@ -46,8 +46,8 @@ const T = (t) => {
   try {
     const e = s(t, 4, !0), n = (u(t, e), s(t, 4, !0)), r = {}, c = { tracknumber: "track" };
     for (let i = 0; i < n; i++) {
-      const d = s(t, 4, !0), l = o(t, d), [f, A] = v(l, "=");
-      b(r, c, f.toLowerCase(), m(A));
+      const d = s(t, 4, !0), l = o(t, d), [f, h] = v(l, "=");
+      b(r, c, f.toLowerCase(), m(h));
     }
     return r;
   } catch {
@@ -106,7 +106,7 @@ const T = (t) => {
     e - 1,
     (n = {
       0: a,
-      1: g(s)(t, 2) === 65279 ? k : p,
+      1: g(s, 1)(t, 2) === 65279 ? k : p,
       2: k
     }[s(t, 1)]) != null ? n : y
   );
@@ -156,8 +156,8 @@ const T = (t) => {
       break;
     if (!!l.content)
       if (l.id === "TXXX") {
-        const [f, A] = v(l.content, "\0");
-        i[f] = A;
+        const [f, h] = v(l.content, "\0");
+        i[f] = h;
       } else
         b(i, j, l.id, l.content);
   }
@@ -250,7 +250,7 @@ const T = (t) => {
   }
 }, Z = (t) => {
   try {
-    const e = s(t, 4), n = o(t, 4, a), r = e === 1 ? s(t, 8) : e || x(t);
+    const e = s(t, 4), n = o(t, 4, a), r = e === 1 ? s(t, 8) : e || S(t);
     return {
       size: r,
       type: n,
@@ -288,7 +288,7 @@ const T = (t) => {
       4: y,
       5: k
     }[r];
-    return c && o(n, x(n), c);
+    return c && o(n, S(n), c);
   }
 }, tt = (t) => {
   const e = {};
@@ -297,27 +297,27 @@ const T = (t) => {
     c && b(e, _, r, c);
   }
   return e;
-}, h = (t) => {
+}, A = (t) => {
   var n;
   let e = {};
   for (const { type: r, data: c } of M(t))
     e = { ...e, ...(n = E[r]) == null ? void 0 : n.call(E, c) };
   return e;
 }, E = {
-  moov: h,
-  trak: h,
-  mdia: h,
-  udta: h,
-  meta: (t) => h(et(t)),
+  moov: A,
+  trak: A,
+  mdia: A,
+  udta: A,
+  meta: (t) => A(et(t)),
   ilst: tt
 }, et = (t) => {
   const e = g(o, 4)(t, 4, a), n = g(o, 16)(t, 4, a);
   return e === "hdlr" && n === "mdta" || u(t, 4), t;
 }, dt = (t) => {
-  const e = T(t), n = h(e);
+  const e = T(t), n = A(e);
   return Object.keys(n).length === 0 ? void 0 : n;
 }, nt = (t) => g(o, -32)(t, 8, a) === "APETAGEX", rt = {
-  "Album Artist": "albumartist"
+  "album artist": "albumartist"
 }, lt = (t) => {
   const e = T(t);
   try {
@@ -330,10 +330,10 @@ const T = (t) => {
       u(e, 4);
       let l = "";
       for (; ; ) {
-        const A = o(e, 1, a);
-        if (A === "\0")
+        const h = o(e, 1, a);
+        if (h === "\0")
           break;
-        l += A;
+        l += h;
       }
       const f = o(e, d, y);
       b(c, rt, l.toLowerCase(), f);
@@ -381,10 +381,8 @@ const T = (t) => {
 }, ct = (t) => {
   const e = {};
   let n;
-  for (; n = F(t); ) {
-    const r = o(n.data, n.size, y);
-    b(e, ot, n.id, m(r));
-  }
+  for (; n = F(t); )
+    b(e, ot, n.id, m(o(n.data, n.size, y)));
   return e;
 }, H = (t) => {
   let e, n = {};
