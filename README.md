@@ -2,67 +2,36 @@
 
 [![npm version](https://badge.fury.io/js/@mikiymk%2Faudio-metadata.svg)](https://badge.fury.io/js/@mikiymk%2Faudio-metadata)
 
-This is a fork of [audio-metadata](https://github.com/tmont/audio-metadata). Gzipped size: 2.1K -> 1.3KB.
+This is a fork of [tmont/audio-metadata](https://github.com/tmont/audio-metadata).
 
 This is a library to extract metadata from audio files.
-Specifically, it can extract [ID3v1](http://en.wikipedia.org/wiki/ID3#ID3v1), [ID3v2](http://en.wikipedia.org/wiki/ID3#ID3v2), and [Vorbis comments](http://www.xiph.org/vorbis/doc/v-comment.html) metadata in [OGG containers](http://en.wikipedia.org/wiki/Ogg).
+Specifically, it can extract following metadata:
+
+- [ID3v1](http://en.wikipedia.org/wiki/ID3#ID3v1) (mp3)
+- [ID3v2](http://en.wikipedia.org/wiki/ID3#ID3v2) (mp3, ape, aiff, wav)
+  only frame ID starts with 'T'
+- [Vorbis Comment](https://en.wikipedia.org/wiki/Vorbis_comment) (ogg, flac)
+- [APEv2](https://en.wikipedia.org/wiki/APE_tag) (mp3, ape)
+- [MP4](https://en.wikipedia.org/wiki/MP4_file_format) meta box (mp4)
+- [RIFF](https://en.wikipedia.org/wiki/Resource_Interchange_File_Format) info list (wav, riff)
+- [ASF](https://en.wikipedia.org/wiki/Advanced_Systems_Format) description (wma, asf)
 
 Licensed under the [WTFPL](http://www.wtfpl.net/).
 
-## Usage
+# Install
 
-The library operates solely on `ArrayBuffer`s, `Uint8Array`s, or `Buffer`s for Node's convenience.
-So you'll need to preload your audio data before using this library.
-
-The library defines three methods:
-
-```javascript
-// extract comments from OGG container
-AudioMetaData.ogg(buffer);
-
-// extract ID3v2 tags
-AudioMetaData.id3v2(buffer);
-
-// extract ID3v1 tags
-AudioMetaData.id3v1(buffer);
-
-// extract flac tags
-AudioMetaData.flac(buffer);
-
-// extract wma tags
-AudioMetaData.wma(buffer);
-
-// extract mp4 tags
-AudioMetaData.mp4(buffer);
-```
-
-The result is an object with the metadata. It attempts to normalize common keys:
-
-- **title**: (`TIT1` and `TIT2` in id3v2)
-- **artist**: (`TSE1` in id3v2)
-- **composer**: (`TCOM` in id3v2)
-- **album**: (`TALB` in id3v2)
-- **track**: (`TRCK` in id3v2, commonly `TRACKNUMBER` in vorbis comments)
-- **year**: (`TDRC` (date recorded) is used in id3v2)
-- **encoder**: (`TSSE` in id3v2)
-- **genre**: (`TCON` in id3v2)
-
-Everything else will be keyed by its original name. For id3v2, anything that is not a text identifier (i.e. a frame that starts with a "T") is ignored. This includes comments (`COMM`).
-
-### Node
-
-Install it using NPM:
+Run this command to install the library with NPM.
 
 ```sh
 npm install audio-metadata
 ```
 
 ```javascript
-import * as AudioMetaData from("audio-metadata");
-import * as fs from require("fs");
+import { ogg } from("@mikiymk/audio-metadata");
+import { readFile } from require("fs/promise");
 
-const oggData = fs.readFileSync("/path/to/my.ogg");
-const metadata = AudioMetaData.ogg(oggData);
+const oggData = await readFile("/path/to/my.ogg");
+const metadata = ogg(oggData);
 
 // metadata:
 // {
@@ -76,43 +45,76 @@ const metadata = AudioMetaData.ogg(oggData);
 // }
 ```
 
-### Browser
+# Usage
 
-This library has been tested on current versions of Firefox and Chrome. IE might work, since it apparently supports `ArrayBuffer`. Safari/Opera are probably okayish since they're webkit. Your mileage may vary.
+This library defines functions that receive an `ArrayBuffer` or a View as an argument and return an object.
+So you'll need to preload your audio data before using this library.
 
-Loading `min/audio-metadata.umd.js` will define the `AudioMetadata` global variable.
+```javascript
+import { ogg } from "@mikiymk/audio-metadata";
 
-```html
-<script type="text/javascript" src="audio-metadata.umd.js"></script>
-<script type="text/javascript">
-  var req = new XMLHttpRequest();
-  req.open("GET", "http://example.com/sofine.mp3", true);
-  req.responseType = "arraybuffer";
+// extract comments from OGG container
+const metadata = ogg(buffer);
 
-  req.onload = function () {
-    var metadata = AudioMetaData.id3v2(req.response);
+import { id3v2 } from "@mikiymk/audio-metadata";
 
-    // metadata:
-    // {
-    // 	"TIT2": "Foobar",
-    // 	"title": "Foobar",
-    // 	"TPE1": "The Foobars",
-    // 	"artist": "The Foobars",
-    // 	"TALB": "FUBAR",
-    // 	"album": "FUBAR",
-    // 	"year": "2014",
-    // 	"TRCK": "9",
-    // 	"track": "9",
-    // 	"TSSE": "Lavf53.21.1",
-    // 	"encoder": "Lavf53.21.1"
-    // }
-  };
+// extract ID3v2 tags
+const metadata = id3v2(buffer);
 
-  req.send(null);
-</script>
+import { id3v1 } from "@mikiymk/audio-metadata";
+
+// extract ID3v1 tags
+const metadata = id3v1(buffer);
+
+import { flac } from "@mikiymk/audio-metadata";
+
+// extract flac tags
+const metadata = flac(buffer);
+
+import { wma } from "@mikiymk/audio-metadata";
+
+// extract wma tags
+const metadata = wma(buffer);
+
+import { mp4 } from "@mikiymk/audio-metadata";
+
+// extract mp4 tags
+const metadata = mp4(buffer);
+
+import { apev2 } from "@mikiymk/audio-metadata";
+
+// extract APEv2 tags
+const metadata = apev2(buffer);
+
+import { aiff } from "@mikiymk/audio-metadata";
+
+// extract AIFF tags
+const metadata = aiff(buffer);
+
+import { wav } from "@mikiymk/audio-metadata";
+
+// extract wav tags
+const metadata = wav(buffer);
 ```
 
-## Development
+The result is a key-value object with metadata.
+The following keys are normalized to common keys:
+
+| common tag      | ID3v1 | ID3v2.2      | ID3v2.3, ID3v2.4               | Vorbis Comment | APEv2          | MP4            | RIFF           | ASF           |
+| --------------- | :---: | ------------ | ------------------------------ | -------------- | -------------- | -------------- | -------------- | ------------- |
+| **title**       |  〇   | `TT1`, `TT2` | `TIT1`, `TIT2`                 |                |                | `©nam`         | `INAM`         |               |
+| **album**       |  〇   | `TAL`        | `TALB`                         |                |                | `©alb`         | `IPRD`         | `albumtitle`  |
+| **artist**      |  〇   | `TP1`        | `TPE1`                         |                |                | `©ART`         | `IART`         |               |
+| **albumartist** |       | `TP2`        | `TPE2`                         |                | `album artist` | `aART`         |                |               |
+| **composer**    |       | `TCM`        | `TCOM`                         |                |                | `©wrt`, `©com` | `IMUS`         |               |
+| **track**       |  〇   | `TRK`        | `TRCK`                         | `tracknumber`  |                | `trkn`         | `IPRT`, `ITRK` | `tracknumber` |
+| **disc**        |       | `TPS`        | `TPOS`                         |                |                | `disk`         |                | `partofset`   |
+| **year**        |  〇   | `TYE`        | `TYER`, `TDRC` (date recorded) |                |                | `©day`         |                |               |
+| **encoder**     |       | `TSS`        | `TSSE`                         |                |                | `©too`         | `ISFT`         | `toolname`    |
+| **genre**       |  〇   | `TCO`        | `TCON`                         |                |                | `©gen`, `gnre` | `IGNR`         |               |
+| **comment**     |  〇   | `COM`        | `COMM`                         |                |                | `©cmt`         | `ICMT`         | `comments`    |
+
+# Development
 
 ```bash
 git clone git@github.com:mikiymk/audio-metadata
